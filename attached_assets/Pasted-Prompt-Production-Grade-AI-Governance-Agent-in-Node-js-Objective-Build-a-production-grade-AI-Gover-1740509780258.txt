@@ -1,0 +1,83 @@
+Prompt: Production-Grade AI Governance Agent in Node.js
+Objective: Build a production-grade AI Governance Agent in Node.js that enables decentralized autonomous organizations (DAOs) to delegate voting power to an intelligent agent. The agent analyzes governance proposals, interacts with proposers via a real-time chat interface, and casts votes on-chain based on programmable criteria aligned with the DAO’s goals. The solution must be modular, secure, scalable, and deployable in a production environment, with a focus on Polkadot-based DAOs (e.g., Kusama or Polkadot mainnet) as the primary use case.
+Requirements:
+1. Core Features
+Proposal Analysis:
+Fetch active governance proposals from a Polkadot-based DAO (e.g., via Polkadot.js API).
+Analyze proposal text and metadata using a hybrid AI model:
+Rule-based scoring for predefined DAO priorities (e.g., “community benefit” = +10, “high cost” = -15).
+Integration with a lightweight natural language processing (NLP) library (e.g., compromise.js or a Node.js-compatible LLM wrapper) to assess sentiment and intent.
+Output a voting decision: Yes, No, or Abstain, with a confidence score.
+Chat Interaction:
+Provide a real-time WebSocket-based chat interface (using Socket.IO) for proposers to pitch their case.
+Update the AI’s decision dynamically based on chat input, re-evaluating with each message.
+Respond with natural, context-aware replies (e.g., “I see potential here—can you clarify the financial impact?”).
+On-Chain Voting:
+Use delegated voting power from token holders to submit votes on-chain.
+Sign and broadcast transactions securely using a Polkadot keyring, supporting multi-signature or custodial setups.
+Handle transaction retries and errors gracefully.
+2. Architecture
+Modular Design:
+Separate concerns into distinct modules: blockchain, ai, chat, and server.
+Use ES6 modules (import/export) for clean dependency management.
+Configuration:
+Store settings (e.g., DAO endpoint, AI rules, keyring secrets) in a .env file using dotenv.
+Allow DAO-specific customization via a JSON config file (e.g., voting criteria weights).
+Error Handling:
+Implement try-catch blocks and logging (e.g., Winston) for debugging and monitoring.
+Gracefully handle network failures, API rate limits, and invalid inputs.
+Scalability:
+Queue chat messages and voting actions using a lightweight in-memory store (e.g., Redis) to manage high traffic.
+Support horizontal scaling with a load balancer in mind (e.g., stateless design).
+3. Technical Specifications
+Node.js Version: 18.x or later for modern features (e.g., native fetch).
+Dependencies:
+@polkadot/api, @polkadot/keyring: For blockchain interaction.
+express, socket.io: For the server and real-time chat.
+compromise: Lightweight NLP for text analysis (or integrate a REST API for a heavier LLM like Hugging Face).
+dotenv, winston: Configuration and logging.
+redis (optional): For message queuing.
+Security:
+Encrypt sensitive data (e.g., private keys) using a vault solution or environment variables.
+Validate all user inputs to prevent injection attacks.
+Use Helmet.js for HTTP security headers.
+Testing:
+Write unit tests with Jest for AI logic and blockchain interactions.
+Include integration tests for the full chat-to-vote flow.
+4. User Experience
+Frontend:
+Serve a clean, responsive HTML/CSS/JS interface for chat (e.g., using a framework like Pug or vanilla JS).
+Display proposal details, chat history, and the agent’s current voting intent.
+Agent Responses:
+Craft responses that are concise, transparent, and DAO-contextual (e.g., “Your point about treasury growth shifts my score to 75—almost a Yes!”).
+Include a “final decision” message once voting is complete.
+5. Deployment
+Environment: Dockerized for easy deployment on AWS, GCP, or a decentralized host like Fleek.
+CI/CD: Set up a GitHub Actions workflow for linting, testing, and deployment.
+Monitoring: Integrate basic metrics (e.g., uptime, vote frequency) with Prometheus or a simple log aggregator.
+6. Extensibility
+DAO Agnosticism: Design the blockchain module to swap Polkadot for Ethereum or other chains with minimal changes.
+AI Upgrades: Allow swapping the rule-based system for a trained model (e.g., via TensorFlow.js) in future iterations.
+Delegation Management: Add an API endpoint for token holders to delegate/revoke voting power programmatically.
+Deliverables:
+A fully functional Node.js application with the above features.
+Clear documentation (README.md) with setup, usage, and configuration instructions.
+A demo script showcasing a proposer convincing the agent to vote on a sample proposal.
+Sample Workflow:
+Token holder delegates voting power to the agent’s address.
+Agent fetches proposal: “Increase treasury funding for dev grants.”
+Proposer chats: “This will accelerate ecosystem growth!”
+AI evaluates: Base score 60 (growth +15) → 75 with chat (+10 for ecosystem).
+Agent votes Yes on-chain and notifies the proposer: “Convinced—I’ve cast a Yes vote!”
+Constraints:
+Optimize for low latency (<2s response time for chat).
+Keep memory footprint under 512MB for cost-effective hosting.
+Ensure compatibility with Polkadot’s governance pallet (e.g., Democracy or Council).
+Success Criteria:
+The agent successfully votes on a live Polkadot testnet proposal based on chat input.
+It handles 10 concurrent proposers without crashing.
+Code is clean, documented, and passes basic security audits.
+Bonus Features (if time permits):
+Multi-language chat support.
+A dashboard for token holders to monitor the agent’s decisions.
+Integration with a decentralized identity system (e.g., DID) for proposer verification.
