@@ -1,6 +1,38 @@
+# Dependencies
 node_modules
 dist
-.DS_Store
+
+# Build output
 server/public
-vite.config.ts.*
+.DS_Store
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# IDE files
+.idea
+.vscode
+*.sublime-*
+
+# Debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Replit specific
+.replit
+replit.nix
+.config
+.upm
+.breakpoints
+.cache
+
+# Build artifacts
 *.tar.gz
+vite.config.ts.*
+
+# Database
+*.sqlite
+*.sqlite3
