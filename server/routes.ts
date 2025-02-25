@@ -4,7 +4,8 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertProposalSchema, insertChatMessageSchema } from "@shared/schema";
 import { ApiPromise, WsProvider } from "@polkadot/api";
-import { analyzeProposal, generateChatResponse } from "./services/ai";
+import { analyzeProposal, generateChatResponse, extractVoteDecision } from "./services/ai";
+import { Keyring } from "@polkadot/keyring";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -13,6 +14,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Polkadot API setup
   const wsProvider = new WsProvider("wss://kusama-rpc.polkadot.io");
   const api = await ApiPromise.create({ provider: wsProvider });
+
+  // Setup Polkadot keyring using seed phrase
+  const keyring = new Keyring({ type: 'sr25519' });
+  const agentKey = keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice'); // Use //Alice for testing
 
   // WebSocket handling
   wss.on("connection", (ws) => {
@@ -36,24 +41,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Generate AI response
           const aiResponse = await generateChatResponse(proposal, messages);
 
-          // Save and broadcast the AI's response
+          // Save AI's response
           const aiMessage = await storage.createChatMessage({
             proposalId: validatedMessage.proposalId,
             sender: "agent",
             content: aiResponse
           });
 
-          // Broadcast both messages to all connected clients
+          // Check if AI has decided to vote
+          const voteDecision = extractVoteDecision(aiResponse);
+          if (voteDecision === "aye") {
+            try {
+              // Submit the vote on-chain
+              const vote = api.tx.democracy.vote(proposal.chainId, { Standard: { vote: true, balance: 1000 } });
+              await vote.signAndSend(agentKey);
+
+              // Update proposal status
+              await storage.updateProposalStatus(proposal.id, "voted");
+
+              // Notify about successful vote
+              const voteMessage = await storage.createChatMessage({
+                proposalId: validatedMessage.proposalId,
+                sender: "agent",
+                content: "✅ I've submitted an AYE vote on-chain for this proposal."
+              });
+
+              // Broadcast all messages
+              wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                  client.send(JSON.stringify({ type: "chat", data: savedMessage }));
+                  client.send(JSON.stringify({ type: "chat", data: aiMessage }));
+                  client.send(JSON.stringify({ type: "chat", data: voteMessage }));
+                }
+              });
+              return;
+            } catch (error) {
+              console.error("Failed to submit vote:", error);
+              const errorMessage = await storage.createChatMessage({
+                proposalId: validatedMessage.proposalId,
+                sender: "agent",
+                content: "❌ Failed to submit the vote on-chain. Please try again later."
+              });
+              aiMessage.content += "\n\n" + errorMessage.content;
+            }
+          }
+
+          // Broadcast messages if no vote was made
           wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
-              client.send(JSON.stringify({
-                type: "chat",
-                data: savedMessage
-              }));
-              client.send(JSON.stringify({
-                type: "chat",
-                data: aiMessage
-              }));
+              client.send(JSON.stringify({ type: "chat", data: savedMessage }));
+              client.send(JSON.stringify({ type: "chat", data: aiMessage }));
             }
           });
         }
@@ -89,22 +126,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/proposals/:id/messages", async (req, res) => {
     const messages = await storage.getChatMessages(parseInt(req.params.id));
     res.json(messages);
-  });
-
-  app.post("/api/vote", async (req, res) => {
-    const { proposalId, decision } = req.body;
-    try {
-      const proposal = await storage.getProposal(proposalId);
-      if (!proposal) {
-        return res.status(404).json({ error: "Proposal not found" });
-      }
-
-      // Submit vote to chain (stubbed for now)
-      await storage.updateProposalStatus(proposalId, "voted");
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to submit vote" });
-    }
   });
 
   return httpServer;
