@@ -15,8 +15,12 @@ const fetchProposalSchema = z.object({
 
 //Helper function to format balance (needs implementation)
 const formatBalance = (balance: string, options: { withUnit: string }) => {
-    // Replace this with your actual balance formatting logic
-    return `${balance} ${options.withUnit}`;
+    // Convert balance to DOT (10 decimal places)
+    const amount = BigInt(balance);
+    const dotAmount = Number(amount) / Math.pow(10, 10);
+
+    // Format with 4 decimal places
+    return `${dotAmount.toFixed(4)} ${options.withUnit}`;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
