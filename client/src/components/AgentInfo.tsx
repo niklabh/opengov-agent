@@ -23,7 +23,7 @@ export function AgentInfo() {
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Current Voting Power</p>
-          <p className="text-2xl font-semibold mt-1">{agentInfo?.votingPower} DOT</p>
+          <p className="text-2xl font-semibold mt-1">{agentInfo?.votingPower}</p>
         </div>
         <DelegateModal />
       </CardContent>
