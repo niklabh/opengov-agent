@@ -24,7 +24,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: "/socket" });
 
   // Polkadot API setup
-  const wsProvider = new WsProvider("wss://kusama-rpc.polkadot.io");
+  const wsProvider = new WsProvider("wss://rpc.polkadot.io");
   const api = await ApiPromise.create({ provider: wsProvider });
 
   // Setup Polkadot keyring using seed phrase

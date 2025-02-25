@@ -5,7 +5,7 @@ let api: ApiPromise | null = null;
 
 export async function initPolkadotApi() {
   if (!api) {
-    const wsProvider = new WsProvider("wss://kusama-rpc.polkadot.io");
+    const wsProvider = new WsProvider("wss://rpc.polkadot.io");
     api = await ApiPromise.create({ provider: wsProvider });
   }
   return api;
