@@ -15,6 +15,7 @@
     "@jridgewell/trace-mapping": "^0.3.25",
     "@neondatabase/serverless": "^0.10.4",
     "@polkadot/api": "^15.7.1",
+    "@polkadot/extension-dapp": "^0.58.4",
     "@polkadot/keyring": "^13.4.3",
     "@radix-ui/react-accordion": "^1.2.1",
     "@radix-ui/react-alert-dialog": "^1.1.2",
