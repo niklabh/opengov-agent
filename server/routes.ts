@@ -6,6 +6,12 @@ import { insertProposalSchema, insertChatMessageSchema } from "@shared/schema";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import { analyzeProposal, generateChatResponse, extractVoteDecision } from "./services/ai";
 import { Keyring } from "@polkadot/keyring";
+import { fetchProposalFromPolkassembly } from "./services/polkassembly";
+import { z } from "zod";
+
+const fetchProposalSchema = z.object({
+  proposalId: z.string()
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -106,10 +112,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(proposals);
   });
 
-  app.post("/api/proposals", async (req, res) => {
+  app.post("/api/proposals/fetch", async (req, res) => {
     try {
-      const proposal = insertProposalSchema.parse(req.body);
-      const saved = await storage.createProposal(proposal);
+      const { proposalId } = fetchProposalSchema.parse(req.body);
+
+      // Fetch proposal from Polkassembly
+      const proposalData = await fetchProposalFromPolkassembly(proposalId);
+
+      // Save to database
+      const saved = await storage.createProposal(proposalData);
 
       // Analyze the proposal using AI
       const analysis = await analyzeProposal(saved);
@@ -119,7 +130,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(updated);
     } catch (error) {
-      res.status(400).json({ error: "Invalid proposal data" });
+      console.error("Failed to fetch proposal:", error);
+      res.status(400).json({ error: "Failed to fetch proposal" });
     }
   });
 
