@@ -61,56 +61,60 @@ export default function Chat({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl h-screen flex flex-col">
-      <Card className="flex-1 flex flex-col overflow-hidden">
-        <CardContent className="flex-1 flex flex-col p-6 gap-6">
-          {/* Proposal Details */}
-          <div className="border-b pb-4">
-            <h2 className="text-2xl font-bold">{proposal?.title}</h2>
-            <p className="text-muted-foreground mt-2">{proposal?.description}</p>
-          </div>
-
-          {/* Chat Messages */}
-          <ScrollArea className="flex-1 pr-4">
-            <div className="space-y-4">
-              {messages.map((message, i) => (
-                <div
-                  key={i}
-                  className={`flex ${
-                    message.sender === "agent" ? "justify-start" : "justify-end"
-                  }`}
-                >
-                  <div
-                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                      message.sender === "agent"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <div className="text-xs opacity-70 mb-1">
-                      {message.sender === "agent" ? "AI Agent" : "You"}
-                    </div>
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
+    <div className="flex flex-col h-screen">
+      <div className="container mx-auto px-4 py-6 flex-1 flex flex-col max-w-4xl">
+        <Card className="flex-1 flex flex-col">
+          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+            {/* Proposal Details */}
+            <div className="border-b pb-4 mb-4">
+              <h2 className="text-2xl font-bold">{proposal?.title}</h2>
+              <p className="text-muted-foreground mt-2">{proposal?.description}</p>
             </div>
-          </ScrollArea>
 
-          {/* Input Area */}
-          <div className="flex gap-2 pt-4 border-t">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Type your message..."
-              className="flex-1"
-            />
-            <Button onClick={handleSend}>Send</Button>
-          </div>
-        </CardContent>
-      </Card>
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full pr-4">
+                <div className="space-y-4 pb-4">
+                  {messages.map((message, i) => (
+                    <div
+                      key={i}
+                      className={`flex ${
+                        message.sender === "agent" ? "justify-start" : "justify-end"
+                      }`}
+                    >
+                      <div
+                        className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                          message.sender === "agent"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        <div className="text-xs opacity-70 mb-1">
+                          {message.sender === "agent" ? "AI Agent" : "You"}
+                        </div>
+                        <div className="whitespace-pre-wrap break-words">{message.content}</div>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Input Area */}
+            <div className="flex gap-2 pt-4 border-t mt-4">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                placeholder="Type your message..."
+                className="flex-1"
+              />
+              <Button onClick={handleSend}>Send</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
