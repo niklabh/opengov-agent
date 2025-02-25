@@ -1,4 +1,6 @@
-import { InsertProposal, Proposal, InsertChatMessage, ChatMessage } from "@shared/schema";
+import { InsertProposal, Proposal, InsertChatMessage, ChatMessage, proposals, chatMessages } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Proposals
@@ -7,80 +9,66 @@ export interface IStorage {
   createProposal(proposal: InsertProposal): Promise<Proposal>;
   updateProposalScore(id: number, score: number): Promise<Proposal>;
   updateProposalStatus(id: number, status: string): Promise<Proposal>;
-  
+
   // Chat Messages
   getChatMessages(proposalId: number): Promise<ChatMessage[]>;
   createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
 }
 
-export class MemStorage implements IStorage {
-  private proposals: Map<number, Proposal>;
-  private chatMessages: Map<number, ChatMessage>;
-  private proposalId: number;
-  private messageId: number;
-
-  constructor() {
-    this.proposals = new Map();
-    this.chatMessages = new Map();
-    this.proposalId = 1;
-    this.messageId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getProposal(id: number): Promise<Proposal | undefined> {
-    return this.proposals.get(id);
+    const [proposal] = await db.select().from(proposals).where(eq(proposals.id, id));
+    return proposal;
   }
 
   async listProposals(): Promise<Proposal[]> {
-    return Array.from(this.proposals.values());
+    return await db.select().from(proposals);
   }
 
   async createProposal(insertProposal: InsertProposal): Promise<Proposal> {
-    const id = this.proposalId++;
-    const proposal: Proposal = {
-      ...insertProposal,
-      id,
-      score: 0,
-      status: "pending",
-      voteDecision: null,
-      analysis: null
-    };
-    this.proposals.set(id, proposal);
+    const [proposal] = await db
+      .insert(proposals)
+      .values(insertProposal)
+      .returning();
     return proposal;
   }
 
   async updateProposalScore(id: number, score: number): Promise<Proposal> {
-    const proposal = await this.getProposal(id);
+    const [proposal] = await db
+      .update(proposals)
+      .set({ score })
+      .where(eq(proposals.id, id))
+      .returning();
+
     if (!proposal) throw new Error("Proposal not found");
-    
-    const updated = { ...proposal, score };
-    this.proposals.set(id, updated);
-    return updated;
+    return proposal;
   }
 
   async updateProposalStatus(id: number, status: string): Promise<Proposal> {
-    const proposal = await this.getProposal(id);
+    const [proposal] = await db
+      .update(proposals)
+      .set({ status })
+      .where(eq(proposals.id, id))
+      .returning();
+
     if (!proposal) throw new Error("Proposal not found");
-    
-    const updated = { ...proposal, status };
-    this.proposals.set(id, updated);
-    return updated;
+    return proposal;
   }
 
   async getChatMessages(proposalId: number): Promise<ChatMessage[]> {
-    return Array.from(this.chatMessages.values())
-      .filter(msg => msg.proposalId === proposalId);
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.proposalId, proposalId));
   }
 
   async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
-    const id = this.messageId++;
-    const message: ChatMessage = {
-      ...insertMessage,
-      id,
-      timestamp: new Date()
-    };
-    this.chatMessages.set(id, message);
+    const [message] = await db
+      .insert(chatMessages)
+      .values(insertMessage)
+      .returning();
     return message;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

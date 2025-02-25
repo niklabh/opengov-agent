@@ -7,7 +7,7 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  const wss = new WebSocketServer({ server: httpServer, path: "/socket" });
 
   // Polkadot API setup
   const wsProvider = new WsProvider("wss://kusama-rpc.polkadot.io");
@@ -18,11 +18,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on("message", async (data) => {
       try {
         const message = JSON.parse(data.toString());
-        
+
         if (message.type === "chat") {
           const validatedMessage = insertChatMessageSchema.parse(message.data);
           const savedMessage = await storage.createChatMessage(validatedMessage);
-          
+
           // Broadcast to all connected clients
           wss.clients.forEach((client) => {
             if (client.readyState === WebSocket.OPEN) {
