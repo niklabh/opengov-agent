@@ -13,6 +13,12 @@ const fetchProposalSchema = z.object({
   proposalId: z.string()
 });
 
+//Helper function to format balance (needs implementation)
+const formatBalance = (balance: string, options: { withUnit: string }) => {
+    // Replace this with your actual balance formatting logic
+    return `${balance} ${options.withUnit}`;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   const wss = new WebSocketServer({ server: httpServer, path: "/socket" });
@@ -138,6 +144,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/proposals/:id/messages", async (req, res) => {
     const messages = await storage.getChatMessages(parseInt(req.params.id));
     res.json(messages);
+  });
+
+  app.get("/api/agent/info", async (_req, res) => {
+    try {
+      const keyring = new Keyring({ type: 'sr25519' });
+      const agentKey = keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice');
+      const address = agentKey.address;
+
+      // Get voting power (free balance)
+      const accountInfo = await api.query.system.account(address);
+      const votingPower = accountInfo.data.free.toString();
+
+      res.json({
+        address,
+        votingPower: formatBalance(votingPower, { withUnit: 'DOT' })
+      });
+    } catch (error) {
+      console.error("Failed to get agent info:", error);
+      res.status(500).json({ error: "Failed to get agent information" });
+    }
+  });
+
+  app.post("/api/agent/delegate", async (req, res) => {
+    try {
+      const { amount } = req.body;
+      if (!amount) {
+        return res.status(400).json({ error: "Amount is required" });
+      }
+
+      const keyring = new Keyring({ type: 'sr25519' });
+      const agentKey = keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice');
+
+      // In a real implementation, this would involve calling the appropriate democracy.delegate
+      // or conviction voting pallet functions
+      console.log(`Would delegate ${amount} DOT to ${agentKey.address}`);
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Failed to delegate:", error);
+      res.status(500).json({ error: "Failed to delegate voting power" });
+    }
   });
 
   return httpServer;

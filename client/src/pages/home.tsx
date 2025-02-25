@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Proposal, InsertProposal } from "@shared/schema";
 import { z } from "zod";
+import { AgentInfo } from "@/components/AgentInfo"; // Added import
 
 const fetchProposalSchema = z.object({
   proposalId: z.string().min(1, "Please enter a proposal ID")
@@ -69,8 +70,8 @@ function FetchProposalForm({ onSuccess }: { onSuccess: () => void }) {
           )}
         />
 
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="w-full"
           disabled={fetchProposal.isPending}
         >
@@ -139,7 +140,7 @@ function CreateProposalForm({ onSuccess }: { onSuccess: () => void }) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Describe your proposal..."
                   className="min-h-[100px]"
                   {...field}
@@ -150,8 +151,8 @@ function CreateProposalForm({ onSuccess }: { onSuccess: () => void }) {
           )}
         />
 
-        <Button 
-          type="submit" 
+        <Button
+          type="submit"
           className="w-full"
           disabled={createProposal.isPending}
         >
@@ -163,7 +164,7 @@ function CreateProposalForm({ onSuccess }: { onSuccess: () => void }) {
 }
 
 export default function Home() {
-  const { data: proposals, isLoading } = useQuery<Proposal[]>({ 
+  const { data: proposals, isLoading } = useQuery<Proposal[]>({
     queryKey: ["/api/proposals"]
   });
 
@@ -180,17 +181,6 @@ export default function Home() {
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button>Create Proposal</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Proposal</DialogTitle>
-            </DialogHeader>
-            <CreateProposalForm onSuccess={() => document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label="Close"]')?.click()} />
-          </DialogContent>
-        </Dialog>
-        <Dialog>
-          <DialogTrigger asChild>
             <Button>Load Proposal</Button>
           </DialogTrigger>
           <DialogContent>
@@ -201,6 +191,8 @@ export default function Home() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <AgentInfo />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {proposals?.map((proposal) => (
