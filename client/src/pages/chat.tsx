@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage, Proposal } from "@shared/schema";
 import { createWebSocket, sendChatMessage } from "@/lib/websocket";
 import { analyzeProposal } from "@/lib/scoring";
@@ -60,32 +61,45 @@ export default function Chat({ params }: { params: { id: string } }) {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <Card className="h-[80vh] flex flex-col">
-        <CardContent className="flex-1 flex flex-col p-4">
-          <div className="flex-1 overflow-y-auto space-y-4 p-4">
-            {messages.map((message, i) => (
-              <div
-                key={i}
-                className={`flex ${
-                  message.sender === "agent" ? "justify-start" : "justify-end"
-                }`}
-              >
+    <div className="container mx-auto p-6 max-w-4xl h-screen flex flex-col">
+      <Card className="flex-1 flex flex-col overflow-hidden">
+        <CardContent className="flex-1 flex flex-col p-6 gap-6">
+          {/* Proposal Details */}
+          <div className="border-b pb-4">
+            <h2 className="text-2xl font-bold">{proposal?.title}</h2>
+            <p className="text-muted-foreground mt-2">{proposal?.description}</p>
+          </div>
+
+          {/* Chat Messages */}
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4">
+              {messages.map((message, i) => (
                 <div
-                  className={`rounded-lg px-4 py-2 max-w-[70%] ${
-                    message.sender === "agent"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                  key={i}
+                  className={`flex ${
+                    message.sender === "agent" ? "justify-start" : "justify-end"
                   }`}
                 >
-                  {message.content}
+                  <div
+                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
+                      message.sender === "agent"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <div className="text-xs opacity-70 mb-1">
+                      {message.sender === "agent" ? "AI Agent" : "You"}
+                    </div>
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          
-          <div className="flex gap-2 pt-4">
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
+
+          {/* Input Area */}
+          <div className="flex gap-2 pt-4 border-t">
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}

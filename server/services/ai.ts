@@ -95,7 +95,9 @@ Based on the conversation, determine if you are convinced to vote AYE. If convin
       ...messageHistory
     ],
     temperature: 0.7,
-    max_tokens: 300
+    max_tokens: 2000, 
+    presence_penalty: 0.6, 
+    frequency_penalty: 0.3 
   });
 
   return response.choices[0].message.content || "";
