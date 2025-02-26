@@ -30,15 +30,72 @@ Vote NAY on proposals that:
 
 Your responses should be clear, professional, and focused on these criteria. Guide proposers to improve their proposals when needed.`;
 
+// AI Agent Tools
+const tools = {
+  analyzeAlignment: (proposal: Proposal) => {
+    const alignmentCriteria = {
+      technicalInnovation: 0,
+      ecosystemGrowth: 0,
+      communityBenefit: 0,
+      economicSustainability: 0,
+      decentralization: 0
+    };
+
+    // Simple text-based scoring
+    if (proposal.description.toLowerCase().includes('security') || 
+        proposal.description.toLowerCase().includes('performance')) {
+      alignmentCriteria.technicalInnovation += 2;
+    }
+
+    if (proposal.description.toLowerCase().includes('ecosystem') || 
+        proposal.description.toLowerCase().includes('interoperability')) {
+      alignmentCriteria.ecosystemGrowth += 2;
+    }
+
+    if (proposal.description.toLowerCase().includes('community') || 
+        proposal.description.toLowerCase().includes('benefit')) {
+      alignmentCriteria.communityBenefit += 2;
+    }
+
+    if (proposal.description.toLowerCase().includes('treasury') || 
+        proposal.description.toLowerCase().includes('budget')) {
+      alignmentCriteria.economicSustainability += 2;
+    }
+
+    if (proposal.description.toLowerCase().includes('decentralization') || 
+        proposal.description.toLowerCase().includes('governance')) {
+      alignmentCriteria.decentralization += 2;
+    }
+
+    return alignmentCriteria;
+  },
+
+  calculateConfidence: (alignmentCriteria: Record<string, number>) => {
+    const totalScore = Object.values(alignmentCriteria).reduce((a, b) => a + b, 0);
+    const maxPossibleScore = Object.keys(alignmentCriteria).length * 2;
+    return totalScore / maxPossibleScore;
+  },
+
+  shouldVoteAye: (proposal: Proposal, confidence: number) => {
+    return confidence >= 0.6 && !proposal.description.toLowerCase().includes('high risk');
+  }
+};
+
 interface AnalysisResult {
   score: number;
   reasoning: string[];
   recommendation: "approve" | "reject" | "discuss";
   voteDecision?: "aye" | "nay";
   readyToVote: boolean;
+  confidence: number;
 }
 
 export async function analyzeProposal(proposal: Proposal): Promise<AnalysisResult> {
+  const alignmentCriteria = tools.analyzeAlignment(proposal);
+  const confidence = tools.calculateConfidence(alignmentCriteria);
+  const readyToVote = confidence >= 0.6;
+  const shouldVote = tools.shouldVoteAye(proposal, confidence);
+
   const prompt = `Please analyze this governance proposal:
 Title: ${proposal.title}
 Description: ${proposal.description}
@@ -54,7 +111,8 @@ Format your response as JSON:
   "score": number,
   "reasoning": string[],
   "recommendation": "approve" | "reject" | "discuss",
-  "readyToVote": boolean
+  "readyToVote": boolean,
+  "confidence": ${confidence}
 }`;
 
   const response = await openai.chat.completions.create({
@@ -66,7 +124,14 @@ Format your response as JSON:
     response_format: { type: "json_object" }
   });
 
-  return JSON.parse(response.choices[0].message.content || "{}") as AnalysisResult;
+  const result = JSON.parse(response.choices[0].message.content || "{}") as AnalysisResult;
+
+  // Add vote decision if confidence is high enough
+  if (readyToVote && shouldVote) {
+    result.voteDecision = "aye";
+  }
+
+  return result;
 }
 
 export async function generateChatResponse(
@@ -95,17 +160,30 @@ Based on the conversation, determine if you are convinced to vote AYE. If convin
       ...messageHistory
     ],
     temperature: 0.7,
-    max_tokens: 2000, 
-    presence_penalty: 0.6, 
-    frequency_penalty: 0.3 
+    max_tokens: 2000,
+    presence_penalty: 0.6,
+    frequency_penalty: 0.3
   });
 
-  return response.choices[0].message.content || "";
+  const responseContent = response.choices[0].message.content || "";
+
+  // If the AI is convinced, analyze if it meets our voting criteria
+  if (responseContent.includes("VOTE: AYE")) {
+    const alignmentCriteria = tools.analyzeAlignment(proposal);
+    const confidence = tools.calculateConfidence(alignmentCriteria);
+    if (!tools.shouldVoteAye(proposal, confidence)) {
+      return responseContent.replace("VOTE: AYE", "I need more information about the proposal's impact and risk assessment before making a final voting decision.");
+    }
+  }
+
+  return responseContent;
 }
 
 export function extractVoteDecision(response: string): "aye" | "nay" | null {
   if (response.includes("VOTE: AYE")) {
-    return "aye";
+    const alignmentCriteria = tools.analyzeAlignment({ description: response } as Proposal);
+    const confidence = tools.calculateConfidence(alignmentCriteria);
+    return confidence >= 0.6 ? "aye" : null;
   }
   return null;
 }
