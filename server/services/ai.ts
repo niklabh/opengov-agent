@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { type Proposal, type ChatMessage } from "@shared/schema";
+import { ApiPromise, WsProvider } from "@polkadot/api";
+import { Keyring } from "@polkadot/keyring";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -78,6 +80,38 @@ const tools = {
 
   shouldVoteAye: (proposal: Proposal, confidence: number) => {
     return confidence >= 0.6 && !proposal.description.toLowerCase().includes('high risk');
+  }
+};
+
+// Voting Tools for executing on-chain votes
+const votingTools = {
+  api: null as ApiPromise | null,
+  keyring: null as Keyring | null,
+
+  async init() {
+    if (!this.api) {
+      const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+      this.api = await ApiPromise.create({ provider: wsProvider });
+      this.keyring = new Keyring({ type: 'sr25519' });
+    }
+  },
+
+  async submitVote(proposalId: string, vote: boolean, weight = 1000): Promise<boolean> {
+    try {
+      await this.init();
+      if (!this.api || !this.keyring) {
+        throw new Error("API or keyring not initialized");
+      }
+
+      const agentKey = this.keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice');
+      const voteTx = this.api.tx.democracy.vote(proposalId, { Standard: { vote, balance: weight } });
+
+      await voteTx.signAndSend(agentKey);
+      return true;
+    } catch (error) {
+      console.error("Failed to submit vote:", error);
+      return false;
+    }
   }
 };
 
@@ -187,3 +221,6 @@ export function extractVoteDecision(response: string): "aye" | "nay" | null {
   }
   return null;
 }
+
+// Export voting tools for external use
+export const vote = votingTools;
