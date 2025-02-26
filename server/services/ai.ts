@@ -67,7 +67,12 @@ async function submitVote(proposalId: string, vote: boolean): Promise<boolean> {
     const keyring = new Keyring({ type: 'sr25519' });
     const agentKey = keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice');
 
-    const voteTx = api.tx.democracy.vote(proposalId, { Standard: { vote, balance: 1000 } });
+    // Get the account's free balance
+    const accountInfo = await api.query.system.account(agentKey.address);
+    const votingBalance = accountInfo.data.free;
+
+    // Submit vote with full balance
+    const voteTx = api.tx.democracy.vote(proposalId, { Standard: { vote, balance: votingBalance } });
     await voteTx.signAndSend(agentKey);
     return true;
   } catch (error) {
