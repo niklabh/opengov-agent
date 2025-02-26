@@ -63,27 +63,49 @@ app.use((req, res, next) => {
       log(`serving on port ${port}`);
     });
 
-    // Handle graceful shutdown
+    // Handle graceful shutdown with timeouts
     const shutdown = async () => {
       log('Shutting down gracefully...', 'express');
+      let shutdownTimeout = setTimeout(() => {
+        log('Forced shutdown after timeout', 'express');
+        process.exit(1);
+      }, 10000); // Force shutdown after 10 seconds
+
       try {
-        await pool.end();
-        log('Database connections closed.', 'postgres');
-        server.close(() => {
-          log('HTTP server closed.', 'express');
-          process.exit(0);
+        // Close HTTP server first to stop accepting new connections
+        await new Promise<void>((resolve, reject) => {
+          server.close((err) => {
+            if (err) reject(err);
+            else resolve();
+          });
         });
+        log('HTTP server closed.', 'express');
+
+        // Close database connections if pool exists
+        if (pool) {
+          await pool.end();
+          log('Database connections closed.', 'postgres');
+        }
+
+        // Clear the timeout and exit cleanly
+        clearTimeout(shutdownTimeout);
+        log('Graceful shutdown completed.', 'express');
+        process.exit(0);
       } catch (err) {
-        log(`Error during shutdown: ${err}`, 'express');
+        const error = err as Error;
+        log(`Error during shutdown: ${error.message}`, 'express');
+        clearTimeout(shutdownTimeout);
         process.exit(1);
       }
     };
 
+    // Register shutdown handlers
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
 
   } catch (err) {
-    log(`Failed to start server: ${err}`, 'express');
+    const error = err as Error;
+    log(`Failed to start server: ${error.message}`, 'express');
     throw err;
   }
 })();

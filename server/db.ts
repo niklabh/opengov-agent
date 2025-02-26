@@ -19,7 +19,10 @@ const createPool = async (retries = 5, delay = 2000) => {
       const pool = new Pool({ 
         connectionString: process.env.DATABASE_URL,
         connectionTimeoutMillis: 10000, // 10 second timeout
-        max: 20 // Maximum number of clients in the pool
+        max: 20, // Maximum number of clients in the pool
+        idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+        keepAlive: true, // Enable keepalive
+        keepAliveInitialDelayMillis: 10000 // Start keepalive after 10 seconds
       });
 
       // Test the connection
@@ -46,7 +49,7 @@ export let pool: Pool | null = null;
     pool.on('error', async (error) => {
       const err = error as Error & { code?: string };
       log(`Database pool error: ${err.message}`, 'postgres');
-      if (err.code === '57P01') {
+      if (err.code === '57P01' || err.code === '08006' || err.code === '08001') {
         log('Attempting to reconnect to database...', 'postgres');
         try {
           const newPool = await createPool();
@@ -62,6 +65,23 @@ export let pool: Pool | null = null;
         }
       }
     });
+
+    // Monitor pool health periodically
+    setInterval(async () => {
+      if (pool) {
+        try {
+          const client = await pool.connect();
+          await client.query('SELECT 1');
+          client.release();
+        } catch (error) {
+          const err = error as Error;
+          log(`Health check failed: ${err.message}`, 'postgres');
+          // Trigger reconnection if health check fails
+          pool.emit('error', new Error('Health check failed'));
+        }
+      }
+    }, 30000); // Check every 30 seconds
+
   } catch (error) {
     const err = error as Error;
     log(`Failed to initialize database pool: ${err.message}`, 'postgres');
@@ -69,11 +89,23 @@ export let pool: Pool | null = null;
   }
 })();
 
-// Create database instance once pool is initialized
+// Get database instance with connection check
 export const getDb = async () => {
   if (!pool) {
     throw new Error('Database pool not initialized');
   }
+
+  // Verify connection before returning
+  try {
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+  } catch (error) {
+    const err = error as Error;
+    log(`Database connection verification failed: ${err.message}`, 'postgres');
+    throw new Error('Database connection is not healthy');
+  }
+
   return drizzle({ client: pool, schema });
 };
 
