@@ -1,5 +1,5 @@
 import { InsertProposal, Proposal, InsertChatMessage, ChatMessage, proposals, chatMessages } from "@shared/schema";
-import { db } from "./db";
+import { getDb } from "./db";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -17,15 +17,18 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getProposal(id: number): Promise<Proposal | undefined> {
+    const db = await getDb();
     const [proposal] = await db.select().from(proposals).where(eq(proposals.id, id));
     return proposal;
   }
 
   async listProposals(): Promise<Proposal[]> {
+    const db = await getDb();
     return await db.select().from(proposals);
   }
 
   async createProposal(insertProposal: InsertProposal): Promise<Proposal> {
+    const db = await getDb();
     const [proposal] = await db
       .insert(proposals)
       .values(insertProposal)
@@ -34,6 +37,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProposalScore(id: number, score: number): Promise<Proposal> {
+    const db = await getDb();
     const [proposal] = await db
       .update(proposals)
       .set({ score })
@@ -45,6 +49,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProposalStatus(id: number, status: string): Promise<Proposal> {
+    const db = await getDb();
     const [proposal] = await db
       .update(proposals)
       .set({ status })
@@ -56,6 +61,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChatMessages(proposalId: number): Promise<ChatMessage[]> {
+    const db = await getDb();
     return await db
       .select()
       .from(chatMessages)
@@ -63,6 +69,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createChatMessage(insertMessage: InsertChatMessage): Promise<ChatMessage> {
+    const db = await getDb();
     const [message] = await db
       .insert(chatMessages)
       .values(insertMessage)
