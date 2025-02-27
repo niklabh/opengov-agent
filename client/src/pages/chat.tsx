@@ -118,3 +118,119 @@ export default function Chat({ params }: { params: { id: string } }) {
     </div>
   );
 }
+import { useState, useEffect, useRef } from 'react';
+import { useRoute } from 'wouter';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { ChatInput } from '@/components/ChatInput';
+import { ChatMessage } from '@/components/ChatMessage';
+import { ChatLoader } from '@/components/ChatLoader';
+
+export default function Chat() {
+  const [_, params] = useRoute('/chat/:id');
+  const proposalId = params?.id ? parseInt(params.id) : 0;
+  
+  const [messages, setMessages] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const { toast } = useToast();
+  
+  const ws = useRef(null);
+  
+  useEffect(() => {
+    // Fetch existing messages
+    apiRequest('GET', `/api/proposals/${proposalId}/messages`)
+      .then(data => {
+        setMessages(data);
+        scrollToBottom();
+      })
+      .catch(error => {
+        console.error('Failed to fetch messages:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load chat history',
+          variant: 'destructive',
+        });
+      });
+    
+    // Set up WebSocket connection
+    const socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/socket`);
+    
+    socket.onopen = () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+    };
+    
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'chat' && data.data.proposalId === proposalId) {
+        setMessages(prev => [...prev, data.data]);
+        scrollToBottom();
+        // If we receive a message from the agent, stop loading
+        if (data.data.sender === 'agent') {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setIsConnected(false);
+      toast({
+        title: 'Connection Error',
+        description: 'Lost connection to the server',
+        variant: 'destructive',
+      });
+    };
+    
+    socket.onclose = () => {
+      console.log('WebSocket disconnected');
+      setIsConnected(false);
+    };
+    
+    ws.current = socket;
+    
+    return () => {
+      socket.close();
+    };
+  }, [proposalId]);
+  
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+  
+  const sendMessage = (content) => {
+    if (!content.trim() || !isConnected) return;
+    
+    const message = {
+      type: 'chat',
+      data: {
+        proposalId,
+        sender: 'user',
+        content
+      }
+    };
+    
+    ws.current.send(JSON.stringify(message));
+    // Set loading state when user sends a message
+    setIsLoading(true);
+  };
+  
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((msg, index) => (
+          <ChatMessage key={index} message={msg} />
+        ))}
+        {isLoading && <ChatLoader />}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="p-4 border-t">
+        <ChatInput onSend={sendMessage} disabled={!isConnected || isLoading} />
+      </div>
+    </div>
+  );
+}
