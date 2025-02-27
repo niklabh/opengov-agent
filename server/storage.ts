@@ -23,8 +23,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async listProposals(): Promise<Proposal[]> {
-    const db = await getDb();
-    return await db.select().from(proposals);
+    try {
+      const db = await getDb();
+      // Select only columns we know exist in the table
+      return await db.select({
+        id: proposals.id,
+        chainId: proposals.chainId,
+        title: proposals.title,
+        description: proposals.description,
+        proposer: proposals.proposer,
+        score: proposals.score,
+        status: proposals.status,
+      }).from(proposals);
+    } catch (error) {
+      console.error("Error listing proposals:", error);
+      return []; // Return empty array instead of failing
+    }
   }
 
   async createProposal(insertProposal: InsertProposal): Promise<Proposal> {
