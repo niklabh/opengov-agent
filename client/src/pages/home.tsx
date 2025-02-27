@@ -199,7 +199,10 @@ export default function Home() {
           <Card key={proposal.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">{proposal.title}</h2>
+                <div>
+                  <div className="text-xs text-muted-foreground mb-1">ID: {proposal.id}</div>
+                  <h2 className="text-xl font-semibold">{proposal.title}</h2>
+                </div>
                 <Badge variant={proposal.status === "pending" ? "outline" : "default"}>
                   {proposal.status}
                 </Badge>
