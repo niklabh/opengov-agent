@@ -30,37 +30,8 @@ Vote NAY on proposals that:
 - Benefit narrow interests over the community
 - Lack clear implementation plans`;
 
-// Tools definitions for OpenAI function calling
-const tools = [
-  {
-    type: "function",
-    function: {
-      name: "voteOnProposal",
-      description: "Vote AYE or NAY on a governance proposal",
-      parameters: {
-        type: "object",
-        properties: {
-          vote: {
-            type: "string",
-            enum: ["AYE", "NAY"]
-          },
-          confidence: {
-            type: "number",
-            description: "Confidence score between 0 and 1"
-          },
-          reasoning: {
-            type: "string",
-            description: "Explanation for the voting decision"
-          }
-        },
-        required: ["vote", "confidence", "reasoning"]
-      }
-    }
-  }
-];
-
 // Simple function to submit votes on-chain
-async function submitVote(proposalId: string, vote: boolean): Promise<boolean> {
+async function executeVote(proposalId: string, vote: boolean): Promise<boolean> {
   try {
     const wsProvider = new WsProvider("wss://rpc.polkadot.io");
     const api = await ApiPromise.create({ provider: wsProvider });
@@ -81,6 +52,42 @@ async function submitVote(proposalId: string, vote: boolean): Promise<boolean> {
   }
 }
 
+const availableTools = {
+  async submitVote({ proposalId, vote, reasoning }: { proposalId: string; vote: "AYE" | "NAY"; reasoning: string }) {
+    const success = await executeVote(proposalId, vote === "AYE");
+    return { success, reasoning };
+  }
+};
+
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "submitVote",
+      description: "Submit an on-chain vote for a governance proposal",
+      parameters: {
+        type: "object",
+        properties: {
+          proposalId: {
+            type: "string",
+            description: "The ID of the proposal to vote on"
+          },
+          vote: {
+            type: "string",
+            enum: ["AYE", "NAY"],
+            description: "Vote in favor (AYE) or against (NAY) the proposal"
+          },
+          reasoning: {
+            type: "string",
+            description: "Explanation for the voting decision"
+          }
+        },
+        required: ["proposalId", "vote", "reasoning"]
+      }
+    }
+  }
+];
+
 export async function analyzeProposal(proposal: Proposal): Promise<{
   score: number;
   reasoning: string[];
@@ -94,20 +101,28 @@ export async function analyzeProposal(proposal: Proposal): Promise<{
         role: "user", 
         content: `Analyze this proposal and decide whether to vote AYE or NAY:
           Title: ${proposal.title}
-          Description: ${proposal.description}` 
+          Description: ${proposal.description}
+
+          If you are confident about your decision, use the submitVote function to cast your vote.` 
       }
     ],
     tools: tools,
-    response_format: { type: "json_object" }
+    tool_choice: "auto"
   });
 
-  const result = JSON.parse(response.choices[0].message.content || "{}");
-  const toolCalls = response.choices[0].message.tool_calls;
+  const message = response.choices[0].message;
+  const result = JSON.parse(message.content || "{}");
 
-  if (toolCalls && toolCalls[0]) {
-    const voteDecision = JSON.parse(toolCalls[0].function.arguments);
-    if (voteDecision.confidence >= 0.6) {
-      await submitVote(proposal.chainId, voteDecision.vote === "AYE");
+  // Handle any function calls
+  if (message.tool_calls) {
+    for (const toolCall of message.tool_calls) {
+      if (toolCall.function.name === "submitVote") {
+        const args = JSON.parse(toolCall.function.arguments);
+        await availableTools.submitVote({
+          ...args,
+          proposalId: proposal.chainId // Use the chainId as the proposalId
+        });
+      }
     }
   }
 
@@ -136,10 +151,26 @@ Status: ${proposal.status}`;
       { role: "system", content: contextPrompt },
       ...messageHistory
     ],
-    tools: tools
+    tools: tools,
+    tool_choice: "auto"
   });
 
-  return response.choices[0].message.content || "";
+  const message = response.choices[0].message;
+
+  // Handle any function calls
+  if (message.tool_calls) {
+    for (const toolCall of message.tool_calls) {
+      if (toolCall.function.name === "submitVote") {
+        const args = JSON.parse(toolCall.function.arguments);
+        await availableTools.submitVote({
+          ...args,
+          proposalId: proposal.chainId
+        });
+      }
+    }
+  }
+
+  return message.content || "";
 }
 
 export function extractVoteDecision(response: string): "aye" | "nay" | null {
