@@ -1,13 +1,27 @@
 
-import { Pool } from '@neondatabase/serverless';
+import { Pool, neonConfig } from '@neondatabase/serverless';
 import { log } from "./vite";
+import ws from "ws";
+
+// Set WebSocket implementation
+neonConfig.webSocketConstructor = ws;
+// Increase WebSocket connection timeouts
+neonConfig.wsConnectionTimeoutMillis = 15000; // 15 seconds
+neonConfig.fetchConnectionCache = true;
+// Disable usage of fetch if causing issues
+neonConfig.useSecureWebSocket = false;
 
 async function fixDatabaseColumns() {
   if (!process.env.DATABASE_URL) {
     throw new Error("DATABASE_URL must be set");
   }
 
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  log('Initializing database connection...', 'fix');
+  const pool = new Pool({ 
+    connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: 15000, // 15 seconds
+    max: 5 // Limit connections
+  });
   log('Starting to fix database columns...', 'fix');
 
   try {

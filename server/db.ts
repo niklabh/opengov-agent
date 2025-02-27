@@ -4,7 +4,13 @@ import ws from "ws";
 import * as schema from "@shared/schema";
 import { log } from "./vite";
 
+// Set WebSocket implementation
 neonConfig.webSocketConstructor = ws;
+// Increase WebSocket connection timeouts
+neonConfig.wsConnectionTimeoutMillis = 15000; // 15 seconds
+neonConfig.fetchConnectionCache = true;
+// Disable usage of fetch if causing issues
+neonConfig.useSecureWebSocket = false;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
