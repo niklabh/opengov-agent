@@ -11,3 +11,69 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Styles for rendered HTML content from Polkassembly */
+.proposal-content {
+  line-height: 1.6;
+}
+
+.proposal-content h1,
+.proposal-content h2,
+.proposal-content h3,
+.proposal-content h4,
+.proposal-content h5,
+.proposal-content h6 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.proposal-content p {
+  margin-bottom: 1rem;
+}
+
+.proposal-content ul,
+.proposal-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.proposal-content ul {
+  list-style-type: disc;
+}
+
+.proposal-content ol {
+  list-style-type: decimal;
+}
+
+.proposal-content pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.proposal-content code {
+  font-family: monospace;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.proposal-content blockquote {
+  border-left: 4px solid rgba(0, 0, 0, 0.1);
+  padding-left: 1rem;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+.proposal-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.proposal-content a {
+  color: #3b82f6;
+  text-decoration: underline;
+}
