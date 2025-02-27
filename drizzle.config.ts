@@ -9,6 +9,7 @@ export default {
   schema: './shared/schema.ts',
   out: './migrations',
   driver: 'pg',
+  dialect: 'postgresql',
   dbCredentials: {
     connectionString: process.env.DATABASE_URL,
   },
