@@ -54,7 +54,7 @@ const availableTools = {
 
       // Submit the vote transaction
       const voteValue = vote === 'aye';
-      const tx = api.tx.democracy.vote(referendumIndex, { Standard: { vote: voteValue, conviction: 1 } });
+      const tx = api.tx.democracy.vote(referendumIndex, { Standard: { vote: voteValue, balance: 1000000000000 } });
 
       // Sign and send the transaction
       const hash = await tx.signAndSend(agentAccount);
