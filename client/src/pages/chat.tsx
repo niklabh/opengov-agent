@@ -29,57 +29,66 @@ export default function Chat() {
   };
 
   useEffect(() => {
-    // Fetch existing messages
-    apiRequest('GET', `/api/proposals/${proposalId}/messages`)
-      .then(data => {
-        setMessages(data);
-        scrollToBottom();
-      })
-      .catch(error => {
-        console.error('Failed to fetch messages:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load chat history',
-          variant: 'destructive',
-        });
-      });
-
-    // Set up WebSocket connection
-    const socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/socket`);
-    socketRef.current = socket;
-
-    socket.onopen = () => {
-      console.log('WebSocket connected');
-      setIsConnected(true);
-    };
-
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'chat' && data.data.proposalId === proposalId) {
-        setMessages(prev => [...prev, data.data]);
-        scrollToBottom();
-        // If we receive a message from the agent, stop loading
-        if (data.data.sender === 'agent') {
-          setIsLoading(false);
+    if (proposalId) {
+      const fetchMessages = async () => {
+        try {
+          const data = await apiRequest("GET", `/api/proposals/${proposalId}/messages`);
+          // Ensure data is an array before setting state
+          if (Array.isArray(data)) {
+            setMessages(data);
+          } else {
+            console.error("Expected array for messages but got:", data);
+            setMessages([]); // Set to empty array as fallback
+          }
+        } catch (error) {
+          console.error("Failed to fetch messages:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load chat messages",
+            variant: "destructive"
+          });
+          setMessages([]); // Set to empty array on error
         }
-      }
-    };
+      };
 
-    socket.onclose = () => {
-      console.log('WebSocket disconnected');
-      setIsConnected(false);
-    };
+      fetchMessages();
 
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      toast({
-        title: 'Connection Error',
-        description: 'Failed to connect to chat service',
-        variant: 'destructive',
-      });
-    };
+      // Set up WebSocket connection
+      socketRef.current = createWebSocket();
 
-    return () => socket.close();
+      socketRef.current.onopen = () => {
+        setIsConnected(true);
+        console.log("WebSocket connected");
+      };
+
+      socketRef.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "chat" && data.data && data.data.proposalId === proposalId) {
+            setMessages((prevMessages) => [...prevMessages, data.data]);
+            setIsLoading(false);
+          }
+        } catch (err) {
+          console.error("Error processing WebSocket message:", err);
+        }
+      };
+
+      socketRef.current.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setIsConnected(false);
+      };
+
+      socketRef.current.onclose = () => {
+        console.log("WebSocket disconnected");
+        setIsConnected(false);
+      };
+
+      return () => {
+        if (socketRef.current) {
+          socketRef.current.close();
+        }
+      };
+    }
   }, [proposalId, toast]);
 
   const handleSend = () => {
