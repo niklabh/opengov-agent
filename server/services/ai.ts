@@ -42,8 +42,17 @@ async function executeVote(proposalId: string, vote: boolean): Promise<boolean> 
     const accountInfo = await api.query.system.account(agentKey.address);
     const votingBalance = accountInfo.data.free;
 
-    // Submit vote with full balance
-    const voteTx = api.tx.democracy.vote(proposalId, { Standard: { vote, balance: votingBalance } });
+    // Submit vote with full balance using the correct format
+    const voteTx = api.tx.convictionVoting.vote(proposalId, { 
+      Standard: { 
+        balance: votingBalance, 
+        vote: { 
+          aye: vote, 
+          conviction: 1 
+        } 
+      } 
+    });
+    
     await voteTx.signAndSend(agentKey);
     return true;
   } catch (error) {
