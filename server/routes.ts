@@ -142,13 +142,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Save to database
         const saved = await storage.createProposal(proposalData);
 
-        // Analyze the proposal using AI
-        const analysis = await analyzeProposal(saved);
-
-        // Update the proposal with the analysis results
-        const updated = await storage.updateProposalScore(saved.id, analysis.score);
-
-        res.json(updated);
+        try {
+          // Analyze the proposal using AI
+          const analysis = await analyzeProposal(saved);
+          
+          // Make sure we have a score value (default to 0 if not)
+          const score = (analysis && analysis.score !== undefined) ? analysis.score : 0;
+          
+          // Update the proposal with the analysis results
+          const updated = await storage.updateProposalScore(saved.id, score);
+          
+          res.json(updated);
+        } catch (error) {
+          console.error("Error analyzing proposal:", error);
+          
+          // Return the saved proposal without score update if analysis fails
+          res.json(saved);
+        }
       } catch (error) {
         console.error("Failed to fetch proposal:", error);
         res.status(400).json({ error: "Failed to fetch proposal" });

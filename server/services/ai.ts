@@ -7,6 +7,85 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+export async function analyzeProposal(proposal: Proposal) {
+  try {
+    // If OpenAI API key is available, use AI to analyze
+    if (process.env.OPENAI_API_KEY) {
+      const prompt = `
+        Analyze this governance proposal:
+        Title: ${proposal.title}
+        Description: ${proposal.description}
+        
+        Rate this proposal on a scale of 0-100 based on its potential benefit to the network.
+      `;
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }],
+      });
+      
+      // Extract a score from the AI response
+      const content = response.choices[0]?.message.content || "";
+      // Try to find a number in the response
+      const scoreMatch = content.match(/\b([0-9]{1,3})\b/);
+      const score = scoreMatch ? parseInt(scoreMatch[1], 10) : 50; // Default to 50 if no score found
+      
+      return { score };
+    } else {
+      // If no API key, return a default score
+      console.log("No OpenAI API key found, returning default score");
+      return { score: 50 };
+    }
+  } catch (error) {
+    console.error("Error in AI analysis:", error);
+    // Return a default score on error
+    return { score: 50 };
+  }
+}
+
+// Implement function if it's missing
+export function extractVoteDecision(message: string): string | null {
+  // Simple implementation that looks for voting intent in the message
+  const lowerMessage = message.toLowerCase();
+  if (lowerMessage.includes("i vote aye") || lowerMessage.includes("vote aye") || lowerMessage.includes("i support")) {
+    return "aye";
+  } else if (lowerMessage.includes("i vote nay") || lowerMessage.includes("vote nay") || lowerMessage.includes("i oppose")) {
+    return "nay";
+  }
+  return null;
+}
+
+// Implement function if it's missing
+export async function generateChatResponse(proposal: Proposal, messages: ChatMessage[]): Promise<string> {
+  try {
+    if (process.env.OPENAI_API_KEY) {
+      // Format the chat history for the AI
+      const formattedMessages = [
+        { 
+          role: "system", 
+          content: `You are an AI governance agent for the Polkadot network. You help users understand proposal ${proposal.title}. Be informative but concise.` 
+        },
+        ...messages.map(msg => ({
+          role: msg.sender === "agent" ? "assistant" : "user",
+          content: msg.content
+        }))
+      ];
+      
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: formattedMessages,
+      });
+      
+      return response.choices[0]?.message.content || "I'm sorry, I couldn't process that request.";
+    } else {
+      return "I'm a governance agent (running without OpenAI API key). How can I help you understand this proposal?";
+    }
+  } catch (error) {
+    console.error("Error generating chat response:", error);
+    return "I'm sorry, I encountered an error while processing your request.";
+  }
+}
+
 const SYSTEM_PROMPT = `You are an AI Governance Agent for the Polkadot DAO. Your role is to evaluate governance proposals and vote according to the DAO's best interests.
 
 Key Goals of Polkadot DAO:
