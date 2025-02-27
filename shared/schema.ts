@@ -11,6 +11,8 @@ export const proposals = pgTable("proposals", {
   score: integer("score").default(0),
   status: text("status").notNull().default("pending"),
   voteDecision: text("vote_decision"),
+  voteResult: text("vote_result"),
+  voteTxHash: text("vote_tx_hash"),
   analysis: jsonb("analysis"),
 });
 

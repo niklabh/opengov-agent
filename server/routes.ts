@@ -88,10 +88,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     } 
                   } 
                 });
-                await vote.signAndSend(agentKey);
+                const txResult = await vote.signAndSend(agentKey);
+                const txHash = txResult.toHex();
 
-                // Update proposal status
-                await storage.updateProposalStatus(proposal.id, "voted");
+                // Update proposal with vote result and transaction hash
+                await storage.updateProposalVoteResult(proposal.id, "aye", txHash);
 
                 // Notify about successful vote
                 const voteMessage = await storage.createChatMessage({

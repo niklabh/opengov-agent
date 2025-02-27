@@ -69,13 +69,14 @@ const availableTools = {
 
       // Sign and send the transaction
       const hash = await tx.signAndSend(agentAccount);
+      const txHash = hash.toHex();
 
       // Log the vote details
       console.log(`Vote submitted: ${vote} on referendum ${referendumIndex}`);
-      console.log(`Transaction hash: ${hash.toHex()}`);
+      console.log(`Transaction hash: ${txHash}`);
 
-      // Store the vote reasoning in the database
-      // This would typically be implemented to store the reasoning
+      // Return the transaction hash so it can be stored
+      return { success: true, hash: txHash, vote: vote };
 
       return { success: true, hash: hash.toHex() };
     } catch (error) {

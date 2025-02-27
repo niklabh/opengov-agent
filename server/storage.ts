@@ -59,6 +59,22 @@ export class DatabaseStorage implements IStorage {
     if (!proposal) throw new Error("Proposal not found");
     return proposal;
   }
+  
+  async updateProposalVoteResult(id: number, voteResult: string, voteTxHash: string): Promise<Proposal> {
+    const db = await getDb();
+    const [proposal] = await db
+      .update(proposals)
+      .set({ 
+        voteResult,
+        voteTxHash,
+        status: "voted" 
+      })
+      .where(eq(proposals.id, id))
+      .returning();
+
+    if (!proposal) throw new Error("Proposal not found");
+    return proposal;
+  }
 
   async getChatMessages(proposalId: number): Promise<ChatMessage[]> {
     const db = await getDb();

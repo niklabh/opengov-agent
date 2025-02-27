@@ -212,6 +212,29 @@ export default function Home() {
               <p className="text-muted-foreground mb-4 line-clamp-3">
                 {proposal.description}
               </p>
+              <div className="flex space-x-2 mt-2">
+                <Badge variant={proposal.status === "voted" ? "success" : "secondary"}>
+                  {proposal.status === "voted" ? "Voted" : "Pending"}
+                </Badge>
+                <Badge variant="outline">{proposal.score}/100</Badge>
+                {proposal.voteResult && (
+                  <Badge variant="outline" className="bg-green-100">
+                    Vote: {proposal.voteResult.toUpperCase()}
+                  </Badge>
+                )}
+              </div>
+              {proposal.voteTxHash && (
+                <div className="mt-2 text-xs">
+                  <a 
+                    href={`https://polkadot.subscan.io/extrinsic/${proposal.voteTxHash}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    View transaction on Subscan
+                  </a>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <div className="text-sm text-muted-foreground">
                   Score: {proposal.score}
