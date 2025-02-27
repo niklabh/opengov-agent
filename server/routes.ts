@@ -78,8 +78,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const voteDecision = extractVoteDecision(aiResponse);
             if (voteDecision === "aye") {
               try {
-                // Submit the vote on-chain
-                const vote = api.tx.democracy.vote(proposal.chainId, { Standard: { vote: true, balance: 1000 } });
+                // Submit the vote on-chain using conviction voting
+                const vote = api.tx.convictionVoting.vote(proposal.chainId, { 
+                  Standard: { 
+                    balance: 1000000000000, // 100 DOT in planck units
+                    vote: { 
+                      aye: true, 
+                      conviction: 1 // Default conviction (can be 0-6)
+                    } 
+                  } 
+                });
                 await vote.signAndSend(agentKey);
 
                 // Update proposal status

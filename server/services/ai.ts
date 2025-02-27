@@ -52,9 +52,20 @@ const availableTools = {
       // Get the API method for voting
       const referendumIndex = parseInt(proposalId, 10);
 
-      // Submit the vote transaction
+      // Submit the vote transaction using conviction voting
       const voteValue = vote === 'aye';
-      const tx = api.tx.democracy.vote(referendumIndex, { Standard: { vote: voteValue, balance: 1000000000000 } });
+      const conviction = 1; // Default conviction (can be 0-6)
+      const balance = 1000000000000; // 100 DOT in planck units
+      
+      const tx = api.tx.convictionVoting.vote(referendumIndex, {
+        Standard: { 
+          balance: balance, 
+          vote: { 
+            aye: voteValue, 
+            conviction: conviction 
+          } 
+        }
+      });
 
       // Sign and send the transaction
       const hash = await tx.signAndSend(agentAccount);
