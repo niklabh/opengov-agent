@@ -52,14 +52,25 @@ const availableTools = {
       // Get the API method for voting
       const referendumIndex = parseInt(proposalId, 10);
 
+      // Get agent account balance
+      const accountInfo = await api.query.system.account(agentAccount.address);
+      const availableBalance = accountInfo.data.free.toBigInt();
+      
+      // Check if we have enough balance
+      if (availableBalance <= BigInt(0)) {
+        throw new Error("Insufficient balance for voting");
+      }
+      
+      // Use 50% of available balance for voting to keep some for fees
+      const voteBalance = availableBalance / BigInt(2);
+      
       // Submit the vote transaction using conviction voting
       const voteValue = vote === 'aye';
       const conviction = 1; // Default conviction (can be 0-6)
-      const balance = 1000000000000; // 100 DOT in planck units
       
       const tx = api.tx.convictionVoting.vote(referendumIndex, {
         Standard: { 
-          balance: balance, 
+          balance: voteBalance.toString(), 
           vote: { 
             aye: voteValue, 
             conviction: conviction 

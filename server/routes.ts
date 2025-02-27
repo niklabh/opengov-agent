@@ -78,10 +78,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const voteDecision = extractVoteDecision(aiResponse);
             if (voteDecision === "aye") {
               try {
-                // Submit the vote on-chain using conviction voting
+                // Get agent account balance
+                const accountInfo = await api.query.system.account(agentKey.address);
+                const balance = accountInfo.data.free.toBigInt();
+                
+                // Check if we have enough balance
+                if (balance <= BigInt(0)) {
+                  throw new Error("Insufficient balance for voting");
+                }
+                
+                // Use 50% of available balance for voting to keep some for fees
+                const voteBalance = balance / BigInt(2);
+                
+                // Submit the vote on-chain using conviction voting with account balance
                 const vote = api.tx.convictionVoting.vote(proposal.chainId, { 
                   Standard: { 
-                    balance: 1000000000000, // 100 DOT in planck units
+                    balance: voteBalance.toString(), 
                     vote: { 
                       aye: true, 
                       conviction: 1 // Default conviction (can be 0-6)
