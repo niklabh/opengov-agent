@@ -9,6 +9,7 @@ export interface IStorage {
   createProposal(proposal: InsertProposal): Promise<Proposal>;
   updateProposalScore(id: number, score: number): Promise<Proposal>;
   updateProposalStatus(id: number, status: string): Promise<Proposal>;
+  updateProposalVoteResult(id: number, voteResult: string, voteTxHash: string): Promise<Proposal>;
 
   // Chat Messages
   getChatMessages(proposalId: number): Promise<ChatMessage[]>;
@@ -73,7 +74,7 @@ export class DatabaseStorage implements IStorage {
     if (!proposal) throw new Error("Proposal not found");
     return proposal;
   }
-  
+
   async updateProposalVoteResult(id: number, voteResult: string, voteTxHash: string): Promise<Proposal> {
     const db = await getDb();
     const [proposal] = await db

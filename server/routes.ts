@@ -81,15 +81,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Get agent account balance
                 const accountInfo = await api.query.system.account(agentKey.address);
                 const balance = accountInfo.data.free.toBigInt();
-                
+
                 // Check if we have enough balance
                 if (balance <= BigInt(0)) {
                   throw new Error("Insufficient balance for voting");
                 }
-                
+
                 // Use 50% of available balance for voting to keep some for fees
                 const voteBalance = balance / BigInt(2);
-                
+
                 // Submit the vote on-chain using conviction voting with account balance
                 const vote = api.tx.convictionVoting.vote(proposal.chainId, { 
                   Standard: { 
