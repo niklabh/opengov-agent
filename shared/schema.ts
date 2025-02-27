@@ -1,9 +1,10 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, blob } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
-export const proposals = pgTable("proposals", {
-  id: serial("id").primaryKey(),
+export const proposals = sqliteTable("proposals", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   chainId: text("chain_id").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
@@ -13,15 +14,15 @@ export const proposals = pgTable("proposals", {
   voteDecision: text("vote_decision"),
   voteResult: text("vote_result"),
   voteTxHash: text("vote_tx_hash"),
-  analysis: jsonb("analysis"),
+  analysis: blob("analysis", { mode: "json" })
 });
 
-export const chatMessages = pgTable("chat_messages", {
-  id: serial("id").primaryKey(),
+export const chatMessages = sqliteTable("chat_messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   proposalId: integer("proposal_id").notNull(),
   sender: text("sender").notNull(),
   content: text("content").notNull(),
-  timestamp: timestamp("timestamp").defaultNow(),
+  timestamp: integer("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`)
 });
 
 export const insertProposalSchema = createInsertSchema(proposals).omit({ 

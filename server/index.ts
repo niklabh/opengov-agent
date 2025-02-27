@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { pool } from "./db";
+import { getDb } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -39,7 +39,13 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    log('Initializing database...', 'sqlite');
+    await getDb();
+    log('Database initialized successfully', 'sqlite');
+
+    log('Setting up server routes...', 'express');
     const server = await registerRoutes(app);
+    log('Routes registered successfully', 'express');
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
@@ -60,7 +66,7 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`serving on port ${port}`);
+      log(`server started on port ${port}`);
     });
 
     // Handle graceful shutdown with timeouts
@@ -81,13 +87,6 @@ app.use((req, res, next) => {
         });
         log('HTTP server closed.', 'express');
 
-        // Close database connections if pool exists
-        if (pool) {
-          await pool.end();
-          log('Database connections closed.', 'postgres');
-        }
-
-        // Clear the timeout and exit cleanly
         clearTimeout(shutdownTimeout);
         log('Graceful shutdown completed.', 'express');
         process.exit(0);
