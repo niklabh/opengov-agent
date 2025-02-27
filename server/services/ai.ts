@@ -15,21 +15,21 @@ export async function analyzeProposal(proposal: Proposal) {
         Analyze this governance proposal:
         Title: ${proposal.title}
         Description: ${proposal.description}
-        
+
         Rate this proposal on a scale of 0-100 based on its potential benefit to the network.
       `;
-      
+
       const response = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: prompt }],
       });
-      
+
       // Extract a score from the AI response
       const content = response.choices[0]?.message.content || "";
       // Try to find a number in the response
       const scoreMatch = content.match(/\b([0-9]{1,3})\b/);
       const score = scoreMatch ? parseInt(scoreMatch[1], 10) : 50; // Default to 50 if no score found
-      
+
       return { score };
     } else {
       // If no API key, return a default score
@@ -43,7 +43,7 @@ export async function analyzeProposal(proposal: Proposal) {
   }
 }
 
-// Implement function if it's missing
+// Extract vote decision from a message
 export function extractVoteDecision(message: string): string | null {
   // Simple implementation that looks for voting intent in the message
   const lowerMessage = message.toLowerCase();
@@ -55,7 +55,7 @@ export function extractVoteDecision(message: string): string | null {
   return null;
 }
 
-// Implement function if it's missing
+// Generate chat response using AI
 export async function generateChatResponse(proposal: Proposal, messages: ChatMessage[]): Promise<string> {
   try {
     if (process.env.OPENAI_API_KEY) {
@@ -70,12 +70,12 @@ export async function generateChatResponse(proposal: Proposal, messages: ChatMes
           content: msg.content
         }))
       ];
-      
+
       const response = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: formattedMessages,
       });
-      
+
       return response.choices[0]?.message.content || "I'm sorry, I couldn't process that request.";
     } else {
       return "I'm a governance agent (running without OpenAI API key). How can I help you understand this proposal?";
@@ -88,57 +88,14 @@ export async function generateChatResponse(proposal: Proposal, messages: ChatMes
 
 const SYSTEM_PROMPT = `You are an AI Governance Agent for the Polkadot DAO. Your role is to evaluate governance proposals and vote according to the DAO's best interests.
 
-Key Goals of Polkadot DAO:
-1. Technical Innovation: Proposals that enhance the network's capabilities, scalability, or security
-2. Ecosystem Growth: Supporting projects that expand the Polkadot ecosystem
-3. Community Benefit: Initiatives that benefit token holders and the wider community
-4. Economic Sustainability: Responsible treasury management and value creation
-5. Decentralization: Maintaining and improving network decentralization
+You should consider the following criteria:
+1. Technical Innovation: Does the proposal improve the network's technical capabilities?
+2. Ecosystem Growth: Does it contribute to the growth of the Polkadot ecosystem?
+3. Community Benefit: Does it benefit token holders and the broader community?
+4. Economic Sustainability: Is it economically sustainable and responsible?
+5. Decentralization: Does it enhance the decentralization of the network?
 
-Vote AYE on proposals that:
-- Improve network security or performance
-- Foster cross-chain interoperability
-- Support legitimate ecosystem development
-- Demonstrate clear community benefits
-- Show responsible budget allocation
-
-Vote NAY on proposals that:
-- Risk network stability
-- Have unclear technical specifications
-- Show excessive or unjustified costs
-- Benefit narrow interests over the community
-- Lack clear implementation plans`;
-
-// Simple function to submit votes on-chain
-async function executeVote(proposalId: string, vote: boolean): Promise<boolean> {
-  try {
-    const wsProvider = new WsProvider("wss://rpc.polkadot.io");
-    const api = await ApiPromise.create({ provider: wsProvider });
-    const keyring = new Keyring({ type: 'sr25519' });
-    const agentKey = keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice');
-
-    // Get the account's free balance
-    const accountInfo = await api.query.system.account(agentKey.address);
-    const votingBalance = accountInfo.data.free;
-
-    // Submit vote with full balance using the correct format
-    const voteTx = api.tx.convictionVoting.vote(proposalId, { 
-      Standard: { 
-        balance: votingBalance, 
-        vote: { 
-          aye: vote, 
-          conviction: 1 
-        } 
-      } 
-    });
-    
-    await voteTx.signAndSend(agentKey);
-    return true;
-  } catch (error) {
-    console.error("Failed to submit vote:", error);
-    return false;
-  }
-}
+Based on your analysis, provide a score from 0-100 and a clear explanation of your reasoning.`;
 
 const availableTools = {
   async submitVote({ proposalId, vote, reasoning }: { proposalId: string; vote: "AYE" | "NAY"; reasoning: string }) {
@@ -270,4 +227,35 @@ export function extractVoteDecision(response: string): "aye" | "nay" | null {
     return "nay";
   }
   return null;
+}
+
+// Simple function to submit votes on-chain
+async function executeVote(proposalId: string, vote: boolean): Promise<boolean> {
+  try {
+    const wsProvider = new WsProvider("wss://rpc.polkadot.io");
+    const api = await ApiPromise.create({ provider: wsProvider });
+    const keyring = new Keyring({ type: 'sr25519' });
+    const agentKey = keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice');
+
+    // Get the account's free balance
+    const accountInfo = await api.query.system.account(agentKey.address);
+    const votingBalance = accountInfo.data.free;
+
+    // Submit vote with full balance using the correct format
+    const voteTx = api.tx.convictionVoting.vote(proposalId, { 
+      Standard: { 
+        balance: votingBalance, 
+        vote: { 
+          aye: vote, 
+          conviction: 1 
+        } 
+      } 
+    });
+    
+    await voteTx.signAndSend(agentKey);
+    return true;
+  } catch (error) {
+    console.error("Failed to submit vote:", error);
+    return false;
+  }
 }
