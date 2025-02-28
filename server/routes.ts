@@ -76,13 +76,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: aiResponse
             });
 
-            // Broadcast messages to all connected clients
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({ type: "chat", data: savedMessage }));
-                client.send(JSON.stringify({ type: "chat", data: aiMessage }));
-              }
-            });
+            // Send messages only to the original sender
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({ type: "chat", data: savedMessage }));
+              ws.send(JSON.stringify({ type: "chat", data: aiMessage }));
+            }
+
           }
         } catch (error) {
           log(`WebSocket error: ${error}`, 'websocket');
