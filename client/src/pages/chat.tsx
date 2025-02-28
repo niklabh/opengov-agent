@@ -16,12 +16,12 @@ export default function Chat() {
   const [_, params] = useRoute('/chat/:id');
   const proposalId = params?.id ? parseInt(params.id) : 0;
 
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-  const socketRef = useRef(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -32,12 +32,11 @@ export default function Chat() {
     if (proposalId) {
       const fetchMessages = async () => {
         try {
-          const data = await apiRequest("GET", `/api/proposals/${proposalId}/messages`);
-          // Ensure data is an array before setting state
-          if (Array.isArray(data)) {
-            setMessages(data);
+          const response = await apiRequest("GET", `/api/proposals/${proposalId}/messages`);
+          if (Array.isArray(response)) {
+            setMessages(response);
           } else {
-            console.error("Expected array for messages but got:", data);
+            console.error("Expected array for messages but got:", response);
             setMessages([]); // Set to empty array as fallback
           }
         } catch (error) {
