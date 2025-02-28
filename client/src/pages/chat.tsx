@@ -2,14 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useRoute } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { ChatInput } from '@/components/ChatInput';
-import { ChatMessage as ChatMessageComponent } from '@/components/ChatMessage';
-import { ChatLoader } from '@/components/ChatLoader';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChatMessage, Proposal } from "@shared/schema";
+import { ChatMessage } from "@shared/schema";
 import { createWebSocket } from "@/lib/websocket";
 
 export default function Chat() {
@@ -62,6 +59,26 @@ export default function Chat() {
         console.log("WebSocket connected");
       };
 
+      socketRef.current.onclose = () => {
+        setIsConnected(false);
+        console.log("WebSocket disconnected");
+        toast({
+          title: "Connection Lost",
+          description: "Chat connection lost. Please refresh the page.",
+          variant: "destructive"
+        });
+      };
+
+      socketRef.current.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setIsConnected(false);
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to chat service",
+          variant: "destructive"
+        });
+      };
+
       socketRef.current.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
@@ -74,16 +91,6 @@ export default function Chat() {
         }
       };
 
-      socketRef.current.onerror = (error) => {
-        console.error("WebSocket error:", error);
-        setIsConnected(false);
-      };
-
-      socketRef.current.onclose = () => {
-        console.log("WebSocket disconnected");
-        setIsConnected(false);
-      };
-
       return () => {
         if (socketRef.current) {
           socketRef.current.close();
@@ -93,7 +100,7 @@ export default function Chat() {
   }, [proposalId, toast]);
 
   const handleSend = () => {
-    if (!input.trim() || !isConnected || isLoading) return;
+    if (!input.trim()) return;
 
     const message = {
       proposalId,
@@ -117,7 +124,7 @@ export default function Chat() {
       setIsLoading(false);
       toast({
         title: 'Connection Error',
-        description: 'Not connected to chat service',
+        description: 'Not connected to chat service. Please refresh the page.',
         variant: 'destructive',
       });
     }
@@ -144,7 +151,13 @@ export default function Chat() {
                     </div>
                   </div>
                 ))}
-                {isLoading && <ChatLoader />}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-secondary/50 p-4 rounded-lg">
+                      Thinking...
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
@@ -157,11 +170,11 @@ export default function Chat() {
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Type your message..."
                 className="flex-1"
-                disabled={!isConnected || isLoading}
+                disabled={isLoading}
               />
               <Button 
                 onClick={handleSend} 
-                disabled={!input.trim() || !isConnected || isLoading}
+                disabled={!input.trim() || isLoading}
               >
                 Send
               </Button>
