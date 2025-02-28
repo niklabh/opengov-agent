@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ export function DelegateModal() {
     try {
       setIsConnecting(true);
       const extensions = await web3Enable('AI Governance Agent');
-      
+
       if (extensions.length === 0) {
         toast({
           title: "No wallet found",
@@ -62,10 +62,11 @@ export function DelegateModal() {
     }
 
     try {
-      await apiRequest("POST", "/api/agent/delegate", {
+      const response = await apiRequest("POST", "/api/agent/delegate", {
         fromAddress: selectedAddress,
         amount: parseFloat(amount)
       });
+      await response.json(); // Ensure we wait for the response to be processed
 
       toast({
         title: "Success",

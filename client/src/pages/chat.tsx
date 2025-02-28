@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage, Proposal } from "@shared/schema";
-import { createWebSocket, sendChatMessage } from "@/lib/websocket";
+import { createWebSocket } from "@/lib/websocket";
 
 export default function Chat() {
   const [_, params] = useRoute('/chat/:id');
@@ -33,10 +33,12 @@ export default function Chat() {
       const fetchMessages = async () => {
         try {
           const response = await apiRequest("GET", `/api/proposals/${proposalId}/messages`);
-          if (Array.isArray(response)) {
-            setMessages(response);
+          const data = await response.json();
+
+          if (Array.isArray(data)) {
+            setMessages(data);
           } else {
-            console.error("Expected array for messages but got:", response);
+            console.error("Expected array for messages but got:", data);
             setMessages([]); // Set to empty array as fallback
           }
         } catch (error) {
@@ -100,7 +102,7 @@ export default function Chat() {
     };
 
     // Add message to UI immediately
-    setMessages(prev => [...prev, { ...message, id: Date.now(), timestamp: new Date().toISOString() }]);
+    setMessages(prev => [...prev, { ...message, id: Date.now(), timestamp: Math.floor(Date.now() / 1000) }]);
     setInput('');
     setIsLoading(true);
     scrollToBottom();

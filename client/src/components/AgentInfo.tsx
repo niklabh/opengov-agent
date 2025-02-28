@@ -4,7 +4,8 @@ import { DelegateModal } from "./DelegateModal";
 
 export function AgentInfo() {
   const { data: agentInfo, isLoading } = useQuery({
-    queryKey: ["/api/agent/info"]
+    queryKey: ["/api/agent/info"],
+    select: (data) => data as { address: string; votingPower: string }
   });
 
   if (isLoading) {
