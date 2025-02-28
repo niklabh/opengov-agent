@@ -35,6 +35,7 @@ try {
         title TEXT NOT NULL,
         description TEXT NOT NULL,
         proposer TEXT NOT NULL,
+        created_at TEXT NOT NULL,
         score INTEGER DEFAULT 0,
         status TEXT NOT NULL DEFAULT 'pending',
         vote_decision TEXT,
