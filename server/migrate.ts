@@ -1,27 +1,22 @@
-
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { migrate } from "drizzle-orm/neon-serverless/migrator";
-import { Pool } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import Database from "better-sqlite3";
 import { log } from "./vite";
 
 async function runMigration() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set");
-  }
-
   log("Starting database migration...", "migration");
-  
+
   try {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const db = drizzle(pool);
-    
-    // Run migrations from the 'migrations' folder
-    await migrate(db, { migrationsFolder: "./migrations" });
-    
+    const sqlite = new Database("database.sqlite");
+    const db = drizzle(sqlite);
+
+    // Run migrations
+    await migrate(db, { migrationsFolder: "./drizzle" });
+
     log("Migration completed successfully", "migration");
-    
-    // Close the pool
-    await pool.end();
+
+    // Close database connection
+    sqlite.close();
   } catch (error) {
     log(`Migration failed: ${(error as Error).message}`, "migration");
     process.exit(1);

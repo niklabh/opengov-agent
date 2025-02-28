@@ -18,50 +18,15 @@ const db = drizzle(sqlite, { schema });
 
 // Initialize database tables
 try {
-  // Check if tables exist
-  const tableCheck = sqlite.prepare(`
-    SELECT name FROM sqlite_master 
-    WHERE type='table' AND name IN ('proposals', 'chat_messages')
-  `).all();
+  log('Initializing database...', 'sqlite');
 
-  if (tableCheck.length < 2) {
-    log('Creating database tables...', 'sqlite');
+  // Use Drizzle's migrate functionality to create tables
+  migrate(db, { migrationsFolder: "./drizzle" });
 
-    // Create proposals table
-    sqlite.exec(`
-      CREATE TABLE IF NOT EXISTS proposals (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        chain_id TEXT NOT NULL,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        proposer TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        score INTEGER DEFAULT 0,
-        status TEXT NOT NULL DEFAULT 'pending',
-        vote_decision TEXT,
-        vote_result TEXT,
-        vote_tx_hash TEXT,
-        analysis JSON
-      )
-    `);
-
-    // Create chat_messages table
-    sqlite.exec(`
-      CREATE TABLE IF NOT EXISTS chat_messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        proposal_id INTEGER NOT NULL,
-        sender TEXT NOT NULL,
-        content TEXT NOT NULL,
-        timestamp INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-        FOREIGN KEY (proposal_id) REFERENCES proposals(id)
-      )
-    `);
-
-    log('Database tables created successfully', 'sqlite');
-  }
+  log('Database initialized successfully', 'sqlite');
 } catch (error) {
   const err = error as Error;
-  log(`Failed to initialize database tables: ${err.message}`, 'sqlite');
+  log(`Failed to initialize database: ${err.message}`, 'sqlite');
   throw err;
 }
 
