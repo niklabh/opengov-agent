@@ -14,7 +14,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Proposal, InsertProposal } from "@shared/schema";
 import { z } from "zod";
-import { AgentInfo } from "@/components/AgentInfo"; // Added import
+import { AgentInfo } from "@/components/AgentInfo";
+import { DelegateModal } from "@/components/DelegateModal"; 
 
 const fetchProposalSchema = z.object({
   proposalId: z.string().min(1, "Please enter a proposal ID")
@@ -181,17 +182,33 @@ export default function Home() {
           AI Governance Agent
         </h1>
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Load Proposal</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Load Polkadot Proposal</DialogTitle>
-            </DialogHeader>
-            <FetchProposalForm onSuccess={() => document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label="Close"]')?.click()} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Load Proposal</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Load Polkadot Proposal</DialogTitle>
+              </DialogHeader>
+              <FetchProposalForm onSuccess={() => document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label="Close"]')?.click()} />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                Delegate Voting Power
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delegate Voting Power</DialogTitle>
+              </DialogHeader>
+              <DelegateModal />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <AgentInfo />
