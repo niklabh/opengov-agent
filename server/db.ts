@@ -2,7 +2,6 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "@shared/schema";
 import { log } from "./vite";
-import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
 // Initialize SQLite database
 const sqlite = new Database("database.sqlite", {
@@ -20,10 +19,34 @@ const db = drizzle(sqlite, { schema });
 try {
   log('Initializing database...', 'sqlite');
 
-  // Use Drizzle's migrate functionality to create tables
-  migrate(db, { migrationsFolder: "./drizzle" });
+  // Create tables directly from schema
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS proposals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      chain_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      proposer TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      score INTEGER DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'pending',
+      vote_decision TEXT,
+      vote_result TEXT,
+      vote_tx_hash TEXT,
+      analysis JSON
+    );
 
-  log('Database initialized successfully', 'sqlite');
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      proposal_id INTEGER NOT NULL,
+      sender TEXT NOT NULL,
+      content TEXT NOT NULL,
+      timestamp INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+      FOREIGN KEY (proposal_id) REFERENCES proposals(id)
+    );
+  `);
+
+  log('Database tables created successfully', 'sqlite');
 } catch (error) {
   const err = error as Error;
   log(`Failed to initialize database: ${err.message}`, 'sqlite');
