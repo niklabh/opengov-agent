@@ -200,12 +200,18 @@ export default function Home() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">ID: {proposal.id}</div>
-                  <h2 className="text-xl font-semibold">{proposal.title}</h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="outline">Referendum #{proposal.chainId}</Badge>
+                    <Badge variant={proposal.status === "pending" ? "outline" : "default"}>
+                      {proposal.status}
+                    </Badge>
+                  </div>
+                  <Link href={`/proposal/${proposal.id}`}>
+                    <h2 className="text-xl font-semibold hover:text-blue-600 transition-colors">
+                      {proposal.title}
+                    </h2>
+                  </Link>
                 </div>
-                <Badge variant={proposal.status === "pending" ? "outline" : "default"}>
-                  {proposal.status}
-                </Badge>
               </div>
             </CardHeader>
             <CardContent>
@@ -213,15 +219,12 @@ export default function Home() {
                 {proposal.description}
               </p>
               <div className="flex space-x-2 mt-2">
-                <Badge variant={proposal.status === "voted" ? "success" : "secondary"}>
-                  {proposal.status === "voted" ? "Voted" : "Pending"}
-                </Badge>
-                <Badge variant="outline">{proposal.score}/100</Badge>
-                {proposal.voteResult && (
-                  <Badge variant="outline" className="bg-green-100">
-                    Vote: {proposal.voteResult.toUpperCase()}
+                {proposal.status === "voted" && (
+                  <Badge variant="success">
+                    Voted: {proposal.voteResult?.toUpperCase()}
                   </Badge>
                 )}
+                <Badge variant="outline">{proposal.score}/100</Badge>
               </div>
               {proposal.voteTxHash && (
                 <div className="mt-2 text-xs">
@@ -235,13 +238,18 @@ export default function Home() {
                   </a>
                 </div>
               )}
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mt-4">
                 <div className="text-sm text-muted-foreground">
                   Score: {proposal.score}
                 </div>
-                <Link href={`/chat/${proposal.id}`}>
-                  <Button>Discuss</Button>
-                </Link>
+                <div className="space-x-2">
+                  <Link href={`/proposal/${proposal.id}`}>
+                    <Button variant="outline">View Details</Button>
+                  </Link>
+                  <Link href={`/chat/${proposal.id}`}>
+                    <Button>Discuss</Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>

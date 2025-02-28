@@ -121,6 +121,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
 
+    app.get("/api/proposals/:id", async (req, res) => {
+      try {
+        const proposalId = parseInt(req.params.id);
+        const proposal = await storage.getProposal(proposalId);
+
+        if (!proposal) {
+          return res.status(404).json({ message: "Proposal not found" });
+        }
+
+        res.json(proposal);
+      } catch (error) {
+        console.error("Failed to fetch proposal:", error);
+        res.status(500).json({ message: "Failed to fetch proposal" });
+      }
+    });
+
     app.get("/api/proposals/:id/messages", async (req, res) => {
       const messages = await storage.getChatMessages(parseInt(req.params.id));
       res.json(messages);
