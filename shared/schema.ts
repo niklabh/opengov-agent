@@ -9,6 +9,8 @@ export const proposals = sqliteTable("proposals", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   proposer: text("proposer").notNull(),
+  proposerAddress: text("proposer_address"),
+  createdAt: text("created_at").notNull(),
   score: integer("score").default(0),
   status: text("status").notNull().default("pending"),
   voteDecision: text("vote_decision"),

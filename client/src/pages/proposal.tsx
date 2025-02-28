@@ -38,6 +38,8 @@ export default function ProposalPage() {
     );
   }
 
+  const formattedDate = new Date(proposal.createdAt).toLocaleString();
+
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -61,15 +63,23 @@ export default function ProposalPage() {
               )}
             </div>
             <h1 className="text-3xl font-bold">{proposal.title}</h1>
-            <div className="text-sm text-muted-foreground">
-              Proposed by: {proposal.proposer}
+            <div className="text-sm text-muted-foreground space-y-1">
+              <div>
+                Proposed by: {proposal.proposer}
+                {proposal.proposerAddress && (
+                  <span className="ml-2 font-mono text-xs">
+                    ({proposal.proposerAddress.slice(0, 6)}...{proposal.proposerAddress.slice(-4)})
+                  </span>
+                )}
+              </div>
+              <div>Created: {formattedDate}</div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="prose dark:prose-invert max-w-none" 
                dangerouslySetInnerHTML={{ __html: proposal.description }} />
-          
+
           <div className="flex flex-col gap-2 pt-4 border-t">
             <div>
               <span className="text-sm text-muted-foreground">AI Score:</span>
