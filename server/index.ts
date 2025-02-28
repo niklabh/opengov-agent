@@ -7,12 +7,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Debug logging for critical environment variables
-log('Checking critical environment variables...', 'express');
-log(`OpenAI API Key exists: ${!!process.env.OPENAI_API_KEY}`, 'express');
-log(`Agent Seed Phrase exists: ${!!process.env.AGENT_SEED_PHRASE}`, 'express');
-log(`Database URL exists: ${!!process.env.DATABASE_URL}`, 'express');
-
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -104,11 +98,9 @@ app.use((req, res, next) => {
       }
     };
 
-    // Register shutdown handlers directly on the global process object
-    if (typeof process !== 'undefined') {
-      process.on('SIGTERM', shutdown);
-      process.on('SIGINT', shutdown);
-    }
+    // Register shutdown handlers
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 
   } catch (err) {
     const error = err as Error;
