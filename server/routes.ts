@@ -90,6 +90,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // Use 50% of available balance for voting to keep some for fees
                 const voteBalance = balance / BigInt(2);
 
+                log(`Submitting vote for proposal ${proposal.chainId} with balance ${voteBalance}`, 'polkadot');
+
                 // Submit the vote on-chain using conviction voting with account balance
                 const vote = api.tx.convictionVoting.vote(proposal.chainId, { 
                   Standard: { 
@@ -103,8 +105,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 const txResult = await vote.signAndSend(agentKey);
                 const txHash = txResult.toHex();
 
+                log(`Vote transaction submitted: ${txHash}`, 'polkadot');
+
                 // Update proposal with vote result and transaction hash
                 await storage.updateProposalVoteResult(proposal.id, "aye", txHash);
+                log(`Updated proposal ${proposal.id} status to voted`, 'polkadot');
 
                 // Notify about successful vote
                 const voteMessage = await storage.createChatMessage({
