@@ -98,7 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     balance: voteBalance.toString(), 
                     vote: { 
                       aye: true, 
-                      conviction: 1 
+                      conviction: 6  // Maximum conviction (6x voting power)
                     } 
                   } 
                 });
