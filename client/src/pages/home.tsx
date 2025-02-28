@@ -33,15 +33,17 @@ function FetchProposalForm({ onSuccess }: { onSuccess: () => void }) {
 
   const fetchProposal = useMutation({
     mutationFn: async (data: FetchProposalForm) => {
-      await apiRequest("POST", "/api/proposals/fetch", data);
+      const response = await apiRequest("POST", "/api/proposals/fetch", data);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/proposals"] });
       toast({
         title: "Success",
         description: "Proposal fetched successfully"
       });
-      onSuccess();
+      // Navigate to the proposal page
+      window.location.href = `/proposal/${data.id}`;
       form.reset();
     },
     onError: (error) => {

@@ -43,12 +43,17 @@ export default function ProposalPage() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6 flex items-center justify-between">
-        <Link href="/">
-          <Button variant="outline">← Back</Button>
+        <div className="flex items-center gap-2">
+          <Link href="/">
+            <Button variant="outline">← Back</Button>
+          </Link>
+          <Badge variant={proposal.status === "pending" ? "outline" : "default"}>
+            {proposal.status}
+          </Badge>
+        </div>
+        <Link href={`/chat/${proposal.id}`}>
+          <Button>Discuss with AI Agent</Button>
         </Link>
-        <Badge variant={proposal.status === "pending" ? "outline" : "default"}>
-          {proposal.status}
-        </Badge>
       </div>
 
       <Card>
@@ -72,7 +77,7 @@ export default function ProposalPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="prose dark:prose-invert max-w-none" 
+          <div className="prose dark:prose-invert max-w-none"
                dangerouslySetInnerHTML={{ __html: proposal.description }} />
 
           <div className="flex flex-col gap-2 pt-4 border-t">
@@ -93,12 +98,6 @@ export default function ProposalPage() {
                 </a>
               </div>
             )}
-          </div>
-
-          <div className="flex justify-end pt-4">
-            <Link href={`/chat/${proposal.id}`}>
-              <Button>Discuss with AI Agent</Button>
-            </Link>
           </div>
         </CardContent>
       </Card>
