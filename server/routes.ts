@@ -25,7 +25,8 @@ const formatBalance = (balance: string, options: { withUnit: string }) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-  const wss = new WebSocketServer({ server: httpServer, path: "/socket" });
+  // Change WebSocket path to '/ws'
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
 
   // Polkadot API setup with enhanced error handling
   log('Connecting to Polkadot network...', 'polkadot');
@@ -85,7 +86,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } catch (error) {
           log(`WebSocket error: ${error}`, 'websocket');
+          // Send error message back to client
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: "error",
+              message: "Failed to process message"
+            }));
+          }
         }
+      });
+
+      // Handle connection close
+      ws.on("close", () => {
+        log('WebSocket connection closed', 'websocket');
       });
     });
 

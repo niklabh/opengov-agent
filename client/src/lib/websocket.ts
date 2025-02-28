@@ -1,8 +1,6 @@
 export function createWebSocket() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const host = window.location.hostname;
-  const port = window.location.port || "5000";
-  const wsUrl = `${protocol}//${host}:${port}/socket`;
+  const wsUrl = `${protocol}//${window.location.host}/ws`;
   console.log("Connecting to WebSocket at:", wsUrl);
 
   const socket = new WebSocket(wsUrl);
