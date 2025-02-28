@@ -66,11 +66,6 @@ export default function ProposalPage() {
             <div className="text-sm text-muted-foreground space-y-1">
               <div>
                 Proposed by: {proposal.proposer}
-                {proposal.proposerAddress && (
-                  <span className="ml-2 font-mono text-xs">
-                    ({proposal.proposerAddress.slice(0, 6)}...{proposal.proposerAddress.slice(-4)})
-                  </span>
-                )}
               </div>
               <div>Created: {formattedDate}</div>
             </div>

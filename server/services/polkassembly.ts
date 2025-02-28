@@ -11,7 +11,6 @@ interface PolkassemblyResponse {
   content: string;
   created_at: string;
   proposer: string;
-  proposer_address: string;
 }
 
 export async function fetchProposalFromPolkassembly(proposalId: string): Promise<InsertProposal> {
@@ -37,40 +36,11 @@ export async function fetchProposalFromPolkassembly(proposalId: string): Promise
     ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target']
   });
 
-  // Fetch proposer identity if available
-  let proposerIdentity = data.proposer || "Unknown";
-  if (data.proposer_address) {
-    try {
-      const identityResponse = await fetch(
-        `https://polkadot.subscan.io/api/v2/scan/account/identity`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            address: data.proposer_address
-          })
-        }
-      );
-
-      if (identityResponse.ok) {
-        const identityData = await identityResponse.json();
-        if (identityData.data?.identity?.display) {
-          proposerIdentity = identityData.data.identity.display;
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch proposer identity:", error);
-    }
-  }
-
   return {
     chainId: proposalId,
     title: data.title,
     description: sanitizedContent,
-    proposer: proposerIdentity,
-    proposerAddress: data.proposer_address || "",
+    proposer: data.proposer || "Unknown",
     createdAt: data.created_at || new Date().toISOString()
   };
 }
