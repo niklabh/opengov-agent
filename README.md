@@ -6,6 +6,10 @@ An advanced AI-powered governance platform that revolutionizes decentralized dec
 
 The AI Governance Agent serves as an intelligent mediator in the Polkadot DAO ecosystem, analyzing proposals, engaging with stakeholders, and making informed voting decisions. It combines advanced natural language processing with blockchain integration to create a transparent and efficient governance process.
 
+## Demo
+
+[ai-governance-framework-nikhilranjan2.replit.app](https://ai-governance-framework-nikhilranjan2.replit.app/)
+
 ## Key Features
 
 ### 🤖 AI-Powered Analysis
