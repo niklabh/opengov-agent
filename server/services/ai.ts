@@ -168,7 +168,6 @@ Status: ${proposal.status}`;
       });
 
       const message = response.choices[0].message;
-      console.log(JSON.stringify(response, null, 2));
       const result = message.content || "I'm analyzing this proposal.";
 
       // Handle any function calls
@@ -183,25 +182,19 @@ Status: ${proposal.status}`;
             });
 
             if (voteResult.success) {
-              // Create success message
-              const successMessage = {
-                proposalId: proposal.id,
-                sender: "agent",
-                content: `✅ I've submitted an ${args.vote} vote on-chain for this proposal.\n\nReasoning: ${args.reasoning}\n\nTransaction hash: ${voteResult.hash}`,
-              };
-
-              // Add message to database and return it for immediate display
-              await storage.createChatMessage(successMessage);
-              return successMessage.content;
-            } else {
-              // Create and store error message, return it for immediate display
-              const errorMessage = `❌ Failed to submit the vote: ${voteResult.error}`;
+              // Add a message about the successful vote
               await storage.createChatMessage({
                 proposalId: proposal.id,
                 sender: "agent",
-                content: errorMessage,
+                content: `✅ I've submitted an ${args.vote} vote on-chain for this proposal.\n\nReasoning: ${args.reasoning}\n\nTransaction hash: https://polkadot.subscan.io/tx/${voteResult.hash}`,
               });
-              return errorMessage;
+            } else {
+              // Add an error message if the vote failed
+              await storage.createChatMessage({
+                proposalId: proposal.id,
+                sender: "agent",
+                content: `❌ Failed to submit the vote: ${voteResult.error}`,
+              });
             }
           }
         }
