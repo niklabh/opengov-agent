@@ -6,6 +6,12 @@ import { DelegateModal } from "./DelegateModal";
 import FetchProposalForm from "./FetchProposalForm";
 import { WalletIcon, Vote } from "lucide-react";
 
+function formatPolkadotAddress(address: string) {
+  const prefix = address.slice(0, 8);
+  const suffix = address.slice(-6);
+  return `${prefix}...${suffix}`;
+}
+
 export function AgentInfo() {
   const { data: agentInfo, isLoading } = useQuery({
     queryKey: ["/api/agent/info"],
@@ -29,21 +35,21 @@ export function AgentInfo() {
   return (
     <Card className="mb-8 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 opacity-50"></div>
-      <CardHeader>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          AI Governance Agent
-        </h2>
-      </CardHeader>
-      <CardContent className="relative space-y-6">
+      <CardContent className="relative space-y-6 p-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="space-y-4 p-6 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
             <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
               <WalletIcon className="h-5 w-5" />
               <p className="text-sm font-medium">Agent Address</p>
             </div>
-            <p className="font-mono text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded break-all">
-              {agentInfo?.address}
-            </p>
+            <div className="space-y-2">
+              <p className="font-mono text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded">
+                {agentInfo?.address && formatPolkadotAddress(agentInfo.address)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Click to copy full address
+              </p>
+            </div>
           </div>
           <div className="space-y-4 p-6 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
             <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
@@ -59,7 +65,7 @@ export function AgentInfo() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                 Load Proposal
               </Button>
             </DialogTrigger>
@@ -73,7 +79,7 @@ export function AgentInfo() {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
                 Delegate Voting Power
               </Button>
             </DialogTrigger>

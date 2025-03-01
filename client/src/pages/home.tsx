@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import type { Proposal } from "@shared/schema";
 import { AgentInfo } from "@/components/AgentInfo";
-import { ListStart } from "lucide-react";
+import { ListStart, Vote } from "lucide-react";
 
 export default function Home() {
   const { data: proposals, isLoading } = useQuery<Proposal[]>({
@@ -15,9 +15,10 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="container mx-auto p-6 space-y-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          AI Governance Agent
-        </h1>
+        <div className="flex items-center gap-3">
+          <Vote className="h-8 w-8 text-blue-600" />
+          <h1 className="text-2xl font-bold">AI Governance Agent</h1>
+        </div>
         <div className="animate-pulse space-y-6">
           <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded"></div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -32,13 +33,14 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-6 space-y-8">
-      <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-        AI Governance Agent
-      </h1>
+      <div className="flex items-center gap-3">
+        <Vote className="h-8 w-8 text-blue-600" />
+        <h1 className="text-2xl font-bold">AI Governance Agent</h1>
+      </div>
 
       <AgentInfo />
 
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3">
         <ListStart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
         <h2 className="text-2xl font-bold">Active Proposals</h2>
       </div>
