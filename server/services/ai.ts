@@ -183,19 +183,25 @@ Status: ${proposal.status}`;
             });
 
             if (voteResult.success) {
-              // Add a message about the successful vote
-              await storage.createChatMessage({
+              // Create success message
+              const successMessage = {
                 proposalId: proposal.id,
                 sender: "agent",
                 content: `✅ I've submitted an ${args.vote} vote on-chain for this proposal.\n\nReasoning: ${args.reasoning}\n\nTransaction hash: ${voteResult.hash}`,
-              });
+              };
+
+              // Add message to database and return it for immediate display
+              await storage.createChatMessage(successMessage);
+              return successMessage.content;
             } else {
-              // Add an error message if the vote failed
+              // Create and store error message, return it for immediate display
+              const errorMessage = `❌ Failed to submit the vote: ${voteResult.error}`;
               await storage.createChatMessage({
                 proposalId: proposal.id,
                 sender: "agent",
-                content: `❌ Failed to submit the vote: ${voteResult.error}`,
+                content: errorMessage,
               });
+              return errorMessage;
             }
           }
         }

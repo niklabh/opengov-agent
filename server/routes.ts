@@ -76,16 +76,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
               content: aiResponse
             });
 
-            // Send messages only to the original sender
+            // Send both messages back to client immediately
             if (ws.readyState === WebSocket.OPEN) {
               ws.send(JSON.stringify({ type: "chat", data: savedMessage }));
               ws.send(JSON.stringify({ type: "chat", data: aiMessage }));
             }
-
           }
         } catch (error) {
           log(`WebSocket error: ${error}`, 'websocket');
-          // Send error message back to client
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
               type: "error",
