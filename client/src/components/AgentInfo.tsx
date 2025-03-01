@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { DelegateModal } from "./DelegateModal";
 import FetchProposalForm from "./FetchProposalForm";
 import { WalletIcon, Vote } from "lucide-react";
@@ -15,7 +21,7 @@ function formatPolkadotAddress(address: string) {
 export function AgentInfo() {
   const { data: agentInfo, isLoading } = useQuery({
     queryKey: ["/api/agent/info"],
-    select: (data) => data as { address: string; votingPower: string }
+    select: (data) => data as { address: string; votingPower: string },
   });
 
   if (isLoading) {
@@ -44,7 +50,7 @@ export function AgentInfo() {
             </div>
             <div className="space-y-2">
               <p className="font-mono text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded">
-                {agentInfo?.address && formatPolkadotAddress(agentInfo.address)}
+                {agentInfo?.address}
               </p>
               <p className="text-xs text-muted-foreground">
                 Click to copy full address
@@ -65,7 +71,10 @@ export function AgentInfo() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
                 Load Proposal
               </Button>
             </DialogTrigger>
@@ -73,13 +82,24 @@ export function AgentInfo() {
               <DialogHeader>
                 <DialogTitle>Load Polkadot Proposal</DialogTitle>
               </DialogHeader>
-              <FetchProposalForm onSuccess={() => document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label="Close"]')?.click()} />
+              <FetchProposalForm
+                onSuccess={() =>
+                  document
+                    .querySelector<HTMLButtonElement>(
+                      '[role="dialog"] button[aria-label="Close"]',
+                    )
+                    ?.click()
+                }
+              />
             </DialogContent>
           </Dialog>
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
                 Delegate Voting Power
               </Button>
             </DialogTrigger>
