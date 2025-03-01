@@ -38,7 +38,7 @@ const tools = [
 
 // Available tools implementation
 const availableTools = {
-  async submitVote({ proposalId, vote, reasoning }) {
+  async submitVote({ proposalId, chainId, vote, reasoning }) {
     try {
       // Connect to Polkadot node
       const wsProvider = new WsProvider("wss://rpc.polkadot.io");
@@ -74,7 +74,7 @@ const availableTools = {
       const voteValue = vote === "aye";
       const conviction = 6; // Maximum conviction (6x voting power)
 
-      const tx = api.tx.convictionVoting.vote(proposalId, {
+      const tx = api.tx.convictionVoting.vote(chainId, {
         Standard: {
           balance: voteBalance.toString(),
           vote: {
@@ -178,7 +178,8 @@ Status: ${proposal.status}`;
             const args = JSON.parse(toolCall.function.arguments);
             const voteResult = await availableTools.submitVote({
               ...args,
-              proposalId: proposal.chainId,
+              proposalId: proposal.id,
+              chainId: proposal.chainId,
             });
 
             if (voteResult.success) {
