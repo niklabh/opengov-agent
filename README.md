@@ -1,6 +1,6 @@
-# AI Governance Agent for Polkadot DAO
+# AI Governance Agent
 
-An advanced AI-powered governance platform that revolutionizes decentralized decision-making through intelligent proposal analysis, real-time communication, and automated voting mechanisms for the Polkadot ecosystem.
+An advanced AI-powered governance platform that revolutionizes decentralized decision-making through intelligent proposal analysis, real-time communication, and automated voting mechanisms for DAOs mainly Polkadot ecosystem.
 
 ## Overview
 
