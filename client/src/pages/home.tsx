@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import type { Proposal } from "@shared/schema";
 import { AgentInfo } from "@/components/AgentInfo";
+import { ListStart } from "lucide-react";
 
 export default function Home() {
   const { data: proposals, isLoading } = useQuery<Proposal[]>({
@@ -12,52 +13,67 @@ export default function Home() {
   });
 
   if (isLoading) {
-    return <div className="flex justify-center p-8">Loading proposals...</div>;
+    return (
+      <div className="container mx-auto p-6 space-y-8">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          AI Governance Agent
+        </h1>
+        <div className="animate-pulse space-y-6">
+          <div className="h-64 bg-gray-200 dark:bg-gray-800 rounded"></div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-gray-200 dark:bg-gray-800 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-8">
+    <div className="container mx-auto p-6 space-y-8">
+      <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
         AI Governance Agent
       </h1>
 
       <AgentInfo />
 
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold">Proposals</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <ListStart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <h2 className="text-2xl font-bold">Active Proposals</h2>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {proposals?.map((proposal) => (
-          <Card key={proposal.id} className="hover:shadow-lg transition-shadow">
+          <Card key={proposal.id} className="hover:shadow-lg transition-shadow bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline">Referendum #{proposal.chainId}</Badge>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge variant="outline">#{proposal.chainId}</Badge>
                     <Badge variant={proposal.status === "pending" ? "outline" : "default"}>
                       {proposal.status}
                     </Badge>
                   </div>
                   <Link href={`/proposal/${proposal.id}`}>
-                    <h2 className="text-xl font-semibold hover:text-blue-600 transition-colors">
+                    <h3 className="text-xl font-semibold hover:text-blue-600 transition-colors line-clamp-2">
                       {proposal.title}
-                    </h2>
+                    </h3>
                   </Link>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4 line-clamp-3">
-                {proposal.description}
+                {proposal.description.replace(/<[^>]*>/g, '')}
               </p>
-              <div className="flex space-x-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-2">
                 {proposal.status === "voted" && (
-                  <Badge variant="success">
+                  <Badge variant={proposal.voteResult === "aye" ? "success" : "destructive"}>
                     Voted: {proposal.voteResult?.toUpperCase()}
                   </Badge>
                 )}
-                <Badge variant="outline">{proposal.score}/100</Badge>
+                <Badge variant="outline">Score: {proposal.score}/100</Badge>
               </div>
               {proposal.voteTxHash && (
                 <div className="mt-2 text-xs">
@@ -71,18 +87,13 @@ export default function Home() {
                   </a>
                 </div>
               )}
-              <div className="flex justify-between items-center mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Score: {proposal.score}
-                </div>
-                <div className="space-x-2">
-                  <Link href={`/proposal/${proposal.id}`}>
-                    <Button variant="outline">View Details</Button>
-                  </Link>
-                  <Link href={`/chat/${proposal.id}`}>
-                    <Button>Discuss</Button>
-                  </Link>
-                </div>
+              <div className="flex justify-end items-center gap-2 mt-4">
+                <Link href={`/proposal/${proposal.id}`}>
+                  <Button variant="outline" size="sm">View Details</Button>
+                </Link>
+                <Link href={`/chat/${proposal.id}`}>
+                  <Button size="sm">Discuss</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

@@ -3,7 +3,8 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DelegateModal } from "./DelegateModal";
-import FetchProposalForm from "./FetchProposalForm"; // Assuming this component exists
+import FetchProposalForm from "./FetchProposalForm";
+import { WalletIcon, Vote } from "lucide-react";
 
 export function AgentInfo() {
   const { data: agentInfo, isLoading } = useQuery({
@@ -12,27 +13,55 @@ export function AgentInfo() {
   });
 
   if (isLoading) {
-    return <div>Loading agent information...</div>;
+    return (
+      <Card className="mb-8 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <CardContent className="p-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <Card className="mb-8">
+    <Card className="mb-8 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 opacity-50"></div>
       <CardHeader>
-        <h2 className="text-2xl font-semibold">AI Governance Agent</h2>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          AI Governance Agent
+        </h2>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <p className="text-sm text-muted-foreground">Agent Address</p>
-          <p className="font-mono text-sm mt-1">{agentInfo?.address}</p>
+      <CardContent className="relative space-y-6">
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4 p-6 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
+            <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+              <WalletIcon className="h-5 w-5" />
+              <p className="text-sm font-medium">Agent Address</p>
+            </div>
+            <p className="font-mono text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded break-all">
+              {agentInfo?.address}
+            </p>
+          </div>
+          <div className="space-y-4 p-6 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
+            <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
+              <Vote className="h-5 w-5" />
+              <p className="text-sm font-medium">Current Voting Power</p>
+            </div>
+            <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              {agentInfo?.votingPower}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Current Voting Power</p>
-          <p className="text-2xl font-semibold mt-1">{agentInfo?.votingPower}</p>
-        </div>
-        <div className="flex gap-2">
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
           <Dialog>
             <DialogTrigger asChild>
-              <Button>Load Proposal</Button>
+              <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                Load Proposal
+              </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -44,7 +73,7 @@ export function AgentInfo() {
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 Delegate Voting Power
               </Button>
             </DialogTrigger>

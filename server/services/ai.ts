@@ -42,14 +42,16 @@ const availableTools = {
     try {
       // Connect to Polkadot node
       const wsProvider = new WsProvider("wss://rpc.polkadot.io");
-      const api = await ApiPromise.create({ 
+      const api = await ApiPromise.create({
         provider: wsProvider,
-        noInitWarn: true 
+        noInitWarn: true,
       });
 
       // Create a keyring instance
-      const keyring = new Keyring({ type: 'sr25519' });
-      const agentKey = keyring.addFromUri(process.env.AGENT_SEED_PHRASE || '//Alice');
+      const keyring = new Keyring({ type: "sr25519" });
+      const agentKey = keyring.addFromUri(
+        process.env.AGENT_SEED_PHRASE || "//Alice",
+      );
 
       // Get agent account balance
       const accountInfo = await api.query.system.account(agentKey.address);
@@ -63,7 +65,10 @@ const availableTools = {
       // Use 50% of available balance for voting to keep some for fees
       const voteBalance = balance / BigInt(2);
 
-      log(`Submitting vote for proposal ${proposalId} with balance ${voteBalance}`, 'polkadot');
+      log(
+        `Submitting vote for proposal ${proposalId} with balance ${voteBalance}`,
+        "polkadot",
+      );
 
       // Submit the vote transaction using conviction voting
       const voteValue = vote === "aye";
@@ -83,11 +88,15 @@ const availableTools = {
       const hash = await tx.signAndSend(agentKey);
       const txHash = hash.toHex();
 
-      log(`Vote transaction submitted: ${txHash}`, 'polkadot');
+      log(`Vote transaction submitted: ${txHash}`, "polkadot");
 
       // Update proposal status in database
-      await storage.updateProposalVoteResult(proposalId, vote.toLowerCase(), txHash);
-      log(`Updated proposal ${proposalId} status to voted`, 'polkadot');
+      await storage.updateProposalVoteResult(
+        proposalId,
+        vote.toLowerCase(),
+        txHash,
+      );
+      log(`Updated proposal ${proposalId} status to voted`, "polkadot");
 
       // Return the transaction hash so it can be stored
       return { success: true, hash: txHash, vote: vote };
@@ -110,7 +119,7 @@ export async function analyzeProposal(proposal: Proposal) {
       `;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4-turbo-preview",
         messages: [{ role: "user", content: prompt }],
       });
 
@@ -168,7 +177,7 @@ Status: ${proposal.status}`;
             const args = JSON.parse(toolCall.function.arguments);
             const voteResult = await availableTools.submitVote({
               ...args,
-              proposalId: proposal.id
+              proposalId: proposal.id,
             });
 
             if (voteResult.success) {
@@ -176,14 +185,14 @@ Status: ${proposal.status}`;
               await storage.createChatMessage({
                 proposalId: proposal.id,
                 sender: "agent",
-                content: `✅ I've submitted an ${args.vote} vote on-chain for this proposal.\n\nReasoning: ${args.reasoning}\n\nTransaction hash: ${voteResult.hash}`
+                content: `✅ I've submitted an ${args.vote} vote on-chain for this proposal.\n\nReasoning: ${args.reasoning}\n\nTransaction hash: ${voteResult.hash}`,
               });
             } else {
               // Add an error message if the vote failed
               await storage.createChatMessage({
                 proposalId: proposal.id,
                 sender: "agent",
-                content: `❌ Failed to submit the vote: ${voteResult.error}`
+                content: `❌ Failed to submit the vote: ${voteResult.error}`,
               });
             }
           }
