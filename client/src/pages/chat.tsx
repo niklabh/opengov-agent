@@ -1,17 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { useRoute } from 'wouter';
+import { useRoute, Link } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChatMessage } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
+import { ChatMessage, Proposal } from "@shared/schema";
 import { createWebSocket } from "@/lib/websocket";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Chat() {
   const [_, params] = useRoute('/chat/:id');
   const proposalId = params?.id ? parseInt(params.id) : 0;
+
+  const { data: proposal } = useQuery<Proposal>({
+    queryKey: [`/api/proposals/${proposalId}`],
+    enabled: !!proposalId
+  });
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -130,9 +137,37 @@ export default function Chat() {
     }
   };
 
+  if (!proposal) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="container mx-auto py-6">
       <div className="max-w-4xl mx-auto">
+        {/* Proposal Details Header */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Proposal #{proposal.chainId}</Badge>
+                  <Badge variant={proposal.status === "pending" ? "outline" : "default"}>
+                    {proposal.status}
+                  </Badge>
+                </div>
+                <h2 className="text-2xl font-semibold">{proposal.title}</h2>
+                <div className="text-sm text-muted-foreground">
+                  Proposed by: {proposal.proposer}
+                </div>
+              </div>
+              <Link href={`/proposal/${proposal.id}`}>
+                <Button variant="outline">View Proposal</Button>
+              </Link>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Chat Interface */}
         <Card>
           <CardContent className="p-6">
             <ScrollArea className="h-[60vh]">
