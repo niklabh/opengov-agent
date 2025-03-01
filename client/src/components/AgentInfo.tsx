@@ -52,9 +52,6 @@ export function AgentInfo() {
               <p className="font-mono text-sm bg-gray-50 dark:bg-gray-900 p-2 rounded">
                 {agentInfo?.address}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Click to copy full address
-              </p>
             </div>
           </div>
           <div className="space-y-4 p-6 bg-white/50 dark:bg-gray-900/50 rounded-lg border">
