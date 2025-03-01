@@ -177,7 +177,7 @@ Status: ${proposal.status}`;
             const args = JSON.parse(toolCall.function.arguments);
             const voteResult = await availableTools.submitVote({
               ...args,
-              proposalId: proposal.id,
+              proposalId: proposal.chainId,
             });
 
             if (voteResult.success) {
