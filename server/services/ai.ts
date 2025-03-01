@@ -168,6 +168,7 @@ Status: ${proposal.status}`;
       });
 
       const message = response.choices[0].message;
+      console.log(JSON.stringify(response, null, 2));
       const result = message.content || "I'm analyzing this proposal.";
 
       // Handle any function calls
