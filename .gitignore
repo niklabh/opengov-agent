@@ -36,3 +36,4 @@ vite.config.ts.*
 # Database
 *.sqlite
 *.sqlite3
+*.sqlite*
